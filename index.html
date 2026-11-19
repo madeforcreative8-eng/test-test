@@ -87,6 +87,7 @@
     .status-badge { display: inline-flex; align-items: center; border-radius: 7px; border: 1px solid; padding: 5px 9px; font-size: 11px; font-weight: 800; white-space: nowrap; }
     .status-active { color: #bce99a; background: #203b29; border-color: #467852; }
     .status-retired { color: #e8d0a1; background: #3a3221; border-color: #81683b; }
+    .status-resting { color: #b9d9f5; background: #233543; border-color: #536e87; }
     .status-departed { color: #c7c1ea; background: #302e45; border-color: #655d94; }
     .status-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 13px; }
     .status-row .size-label { margin-right: 2px; }
@@ -355,8 +356,8 @@
       border-bottom: 1px solid #39513f;
     }
     .card-note-content {
-      font-size: 12px;
-      line-height: 1.6;
+      font-size: 11px;
+      line-height: 1.45;
       color: #e1eadf;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
@@ -381,7 +382,7 @@
       .card-left .beetle-name { font-size: 23px; }
       .card-left .size-line { gap: 4px; }
       .card-note-panel { padding: 8px; min-height: 88px; }
-      .card-note-content { font-size: 11.5px; max-height: 52px; }
+      .card-note-content { font-size: 10.2px; max-height: 52px; }
       .compact-card .card-note-content { max-height: 48px; }
     }
     @media (max-width: 370px) {
@@ -592,7 +593,7 @@
     .mini-measures > span > small:last-child { color: #9cafa0; font-size: 10px; }
     .mini-note { border: 1px solid #3b5945; border-radius: 10px; background: linear-gradient(150deg,#203328,#1a2820); min-width: 0; min-height: 105px; padding: 8px 9px; display: flex; flex-direction: column; }
     .mini-note-heading { color: #b4e778; border-bottom: 1px solid #39513f; padding-bottom: 5px; margin-bottom: 6px; font-size: 11px; font-weight: 850; }
-    .mini-note-body { color: #e1eadf; font-size: 11px; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-wrap; overflow-y: auto; max-height: 105px; min-height: 58px; flex: 1 1 auto; scrollbar-width: thin; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+    .mini-note-body { color: #e1eadf; font-size: 10px; line-height: 1.4; overflow-wrap: anywhere; white-space: pre-wrap; overflow-y: auto; max-height: 105px; min-height: 58px; flex: 1 1 auto; scrollbar-width: thin; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
     .mini-note-body:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     @media (max-width: 640px) {
       .mini-card { padding: 10px 11px; }
@@ -636,7 +637,39 @@
   .mini-status-strength { column-gap: 9px !important; }
 }
 
-  </style>
+  
+/* 備考は4行ちょうど見えるよう、文字サイズ・行間・表示高さを固定。 */
+.card-note-panel .card-note-heading {
+  font-size: 10px;
+  line-height: 13px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+}
+.card-note-panel .card-note-content {
+  font-size: 9.6px;
+  line-height: 12px;
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  flex: 0 0 48px;
+  overflow-y: auto;
+}
+.mini-note .mini-note-heading {
+  font-size: 10px;
+  line-height: 13px;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+}
+.mini-note .mini-note-body {
+  font-size: 9.6px;
+  line-height: 12px;
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
+  flex: 0 0 48px;
+  overflow-y: auto;
+}
+</style>
 </head>
 <body>
   <div class="page">
@@ -659,12 +692,12 @@
     <section class="hero" aria-labelledby="mainTitle">
       <p class="eyebrow">MY BEETLE COLLECTION &amp; RANKING</p>
       <h1 id="mainTitle">カブクワデータベース</h1>
-      <p class="hero-copy">自分だけの個体図鑑。種類・名前・サイズ・状態（現役／引退／旅立ち）・備考1・備考2と、3つの能力、独立した「総合的な強さ」を記録・比較できます。</p>
+      <p class="hero-copy">個性を記録し、強さを刻む。<br>種類・名前・サイズ・状態（現役／引退／休養中／旅立ち）・備考1・備考2と、3つの能力、独立した「総合的な強さ」を記録・比較できます。</p>
       <div class="metrics" aria-label="コレクションの集計">
         <div class="metric"><div class="metric-label">登録個体数</div><div class="metric-value"><span id="totalCount">0</span><span class="metric-unit">匹</span></div></div>
         <div class="metric"><div class="metric-label">登録種類数</div><div class="metric-value"><span id="speciesCount">0</span><span class="metric-unit">種</span></div></div>
+        <div class="metric"><div class="metric-label">現役個体数</div><div class="metric-value"><span id="activeCount">0</span><span class="metric-unit">匹</span></div></div>
         <div class="metric"><div class="metric-label">平均の強さ</div><div class="metric-value"><span id="avgStrength">—</span><span class="metric-unit">/10</span></div></div>
-        <div class="metric"><div class="metric-label">最大サイズ</div><div class="metric-value"><span id="maxSize">—</span><span class="metric-unit">mm</span></div></div>
       </div>
     </section>
 
@@ -675,7 +708,7 @@
       <div class="tools">
         <div class="search"><span class="search-symbol" aria-hidden="true">⌕</span><input class="field-control" type="search" id="search" placeholder="名前・種類・備考1・備考2で検索" aria-label="名前・種類・備考1・備考2で検索" /></div>
         <select class="field-control" id="speciesFilter" aria-label="種類で絞り込む"><option value="">すべての種類</option></select>
-        <select class="field-control" id="statusFilter" aria-label="状態で絞り込む"><option value="">すべての状態</option><option value="現役">現役</option><option value="引退">引退</option><option value="旅立ち">旅立ち</option></select>
+        <select class="field-control" id="statusFilter" aria-label="状態で絞り込む"><option value="">すべての状態</option><option value="現役">現役</option><option value="引退">引退</option><option value="休養中">休養中</option><option value="旅立ち">旅立ち</option></select>
         <select class="field-control" id="sort" aria-label="並べ替え">
           <optgroup label="総合的な強さ・3つの能力">
             <option value="strength">★ 総合的な強さ：高い順</option>
@@ -700,8 +733,8 @@
             <option value="nameDesc">名前：逆順</option>
             <option value="species">種類：あいうえお順</option>
             <option value="speciesDesc">種類：逆順</option>
-            <option value="status">状態：現役 → 引退 → 旅立ち</option>
-            <option value="statusDesc">状態：旅立ち → 引退 → 現役</option>
+            <option value="status">状態：現役 → 引退 → 休養中 → 旅立ち</option>
+            <option value="statusDesc">状態：旅立ち → 休養中 → 引退 → 現役</option>
             <option value="notes">備考1：文字順</option>
             <option value="notesDesc">備考1：文字の逆順</option>
           </optgroup>
@@ -751,7 +784,7 @@
         <div class="field full"><label for="nameInput">名前</label><input class="field-control" id="nameInput" name="name" maxlength="100" placeholder="例：クロ" /></div>
         <div class="field"><label for="sizeInput">サイズ（mm）</label><input class="field-control" id="sizeInput" name="size" type="number" inputmode="decimal" step="0.1" min="0.1" max="999.9" placeholder="例：78.5" /></div>
         <div class="field"><label for="weightInput">体重（g）</label><input class="field-control" id="weightInput" name="weight" type="number" inputmode="decimal" step="0.01" min="0" max="999.99" placeholder="例：2.35" /><small>0.01g単位・未計測なら空欄</small></div>
-        <div class="field full"><label for="statusInput">状態</label><select class="field-control" id="statusInput" name="status" required><option value="現役">現役</option><option value="引退">引退</option><option value="旅立ち">旅立ち</option></select><small>各個体の現在の状態を選んでください。あとから変更できます。</small></div>
+        <div class="field full"><label for="statusInput">状態</label><select class="field-control" id="statusInput" name="status" required><option value="現役">現役</option><option value="引退">引退</option><option value="休養中">休養中</option><option value="旅立ち">旅立ち</option></select><small>各個体の現在の状態を選んでください。あとから変更できます。</small></div>
         <div class="field full"><label for="notesInput">備考1</label><textarea class="field-control" id="notesInput" name="notes" maxlength="3000" placeholder="性格、特徴、採集日、産地、飼育メモなど"></textarea></div>
         <div class="field full"><label for="notes2Input">備考2</label><textarea class="field-control" id="notes2Input" name="notes2" maxlength="3000" placeholder="追加メモ、補足、飼育記録など"></textarea></div>
       </div>
@@ -778,22 +811,60 @@
   </dialog>
 
   <dialog class="dialog help-dialog" id="helpDialog" aria-labelledby="helpTitle">
-    <div class="dialog-head"><div><h2 class="dialog-title" id="helpTitle">使い方・大切な注意点</h2><p class="dialog-description">登録前に1分で確認できます</p></div><button type="button" class="close" data-close="helpDialog" aria-label="閉じる">×</button></div>
+    <div class="dialog-head"><div><h2 class="dialog-title" id="helpTitle">カブクワデータベースの使い方</h2><p class="dialog-description">登録からバックアップまで、順番に説明します。</p></div><button type="button" class="close" data-close="helpDialog" aria-label="閉じる">×</button></div>
     <div class="dialog-body guide-content">
-        <h3>トレーナー名を設定する</h3>
-      <p>画面左上の「トレーナー名（未登録）」を押すと、図鑑全体で1つだけ名前を登録・変更できます。常に上部に表示され、一覧画像にも入ります。個体ごとの名前とは別の設定です。</p>
-      <h3>① クワガタを登録する</h3>
-        <p>画面上部の「＋」を押して、種類・名前・サイズ・体重・状態（現役／引退／旅立ち）・備考1・備考2と4つの評価を入力して「登録する」。体重は0.01g単位で記録でき、表示は2.35gのように小数点以下2桁です。未計測なら空欄で登録できます。総合的な強さは、ほかの3能力とは別に1〜10で設定できます。状態はあとから「編集」で変更できます。</p>
-      <h3>② 登録した情報を見る・変更する</h3>
-        <p>個体一覧を検索したり、26種類の並べ替えを利用できます。通常表示では個体名・種類・状態・体長・体重・備考1・備考2と、総合的な強さ・パワー・テクニック・メンタルの4項目を表示します。コンパクト表示は個体名・種類・体長・体重・状態・総合的な強さの数値・備考1のみ表示します。どちらも順位ラベルは表示せず、強さ順の並べ替えは引き続き利用できます。長い備考は枠内をスクロールできます。通常表示には編集・削除ボタンがあり、コンパクト表示はカード（備考欄以外）をタップすると編集できます。表示モードはこのブラウザに記憶されます。</p>
-      <h3>③ 一覧画像を作って送る</h3>
-      <p>「全個体を画像保存」を押すと、体重を含む全情報を強さ順に1ページ最大5匹ずつPNG画像にします。「このPNG画像を保存」または画像長押しで保存し、LINEなどで送れます。複数枚になった場合は各ページを保存してください。</p>
-      <h3>④ バックアップを保存する（重要）</h3>
-      <p>画面下の「↓ バックアップ」でJSONファイルを保存してください。これは個体を編集できる状態で保管するためのものです。別の端末や新しいファイルでは「↑ 復元」からJSONファイルを選びます。復元するとその端末の現在のデータが置き換わります。</p>
-      <p>以前のバージョンから読み込んだ個体は、最初は「現役」として表示します。必要に応じて「編集」で「引退」「旅立ち」に変更してください。</p>
-      <div class="guide-warning"><strong>⚠ 必ず最初に確認</strong><p>まず1匹だけ登録 → ファイルを閉じる → 同じファイルを同じブラウザで再度開き、登録内容が残るか確認してください。スマホのファイルプレビューやプライベートモードなど、保存が続かない環境があります。</p></div>
-      <p>このファイルだけでは、他の端末への自動同期や一般公開はできません。画像を共有しても、登録データそのものは共有・更新されません。秘密にしたい情報は画像に含めないでください。</p>
-      <button type="button" class="btn primary" data-close="helpDialog" style="width:100%;margin-top:7px">確認しました・閉じる</button>
+      <p>カブトムシやクワガタの情報を登録して、自分だけの個体データベースを作れます。</p>
+
+      <h3>① トレーナー名を登録する</h3>
+      <p>画面上部の「トレーナー名」をタップすると、名前を登録・変更できます。</p>
+      <p>登録した名前は、画面上部や個体一覧の画像に表示されます。</p>
+
+      <h3>② 個体を登録する</h3>
+      <p>画面上部の「＋ 個体を登録」をタップします。</p>
+      <p>種類・名前・サイズ・体重・状態・備考などを入力してください。</p>
+      <p><strong>状態は4種類から選べます。</strong></p>
+      <ul><li>現役</li><li>引退</li><li>休養中</li><li>旅立ち</li></ul>
+      <p><strong>強さは4項目をそれぞれ1〜10で設定できます。</strong></p>
+      <ul><li>★ 総合的な強さ</li><li>💪🏻 パワー</li><li>🏓 テクニック</li><li>🫀 メンタル</li></ul>
+      <p>総合的な強さは、ほかの3項目とは別に自由に設定できます。</p>
+      <p>入力が終わったら「登録する」を押してください。</p>
+
+      <h3>③ 登録した個体を見る・編集する</h3>
+      <p>個体一覧には、2種類の表示方法があります。</p>
+      <p><strong>通常表示</strong></p>
+      <p>個体の情報や4つの能力、備考1・備考2を確認できます。「編集」「削除」ボタンも使えます。</p>
+      <p><strong>コンパクト表示</strong></p>
+      <p>名前・種類・状態・強さ・サイズ・体重・備考1を簡単に確認できます。</p>
+      <p>カードをタップすると編集画面が開きます。※備考欄をタップした場合は開きません。</p>
+
+      <h3>④ 個体を検索・並べ替える</h3>
+      <p>名前や種類、備考の文章から個体を検索できます。</p>
+      <p>種類や状態で絞り込むこともできます。</p>
+      <p>並べ替えでは、強さ・パワー・テクニック・メンタル・サイズなどを選べます。</p>
+      <p><strong>強さが同点の場合は、パワー・テクニック・メンタルの合計が高い個体が上に表示されます。</strong></p>
+
+      <h3>⑤ 個体一覧を画像で保存する</h3>
+      <p>「全個体を画像保存」を押すと、登録した個体を画像にまとめられます。</p>
+      <p>1枚につき最大5匹ずつ表示され、個体が多い場合は複数枚に分かれます。</p>
+      <p>作成した画像は、LINEなどで共有できます。</p>
+      <p>iPhoneでは、画像を長押しして保存することもできます。</p>
+      <p>※画像から個体データを復元することはできません。</p>
+
+      <h3>⑥ データをバックアップする【重要】</h3>
+      <p>登録した情報は、基本的に使用中のブラウザ内に保存されます。</p>
+      <p>ただし、別のスマホやブラウザには自動で引き継がれません。また、開き方によっては保存ができない場合があります。</p>
+      <p>大切な個体データを守るため、<strong>定期的にバックアップを保存してください。</strong></p>
+      <p><strong>バックアップの保存方法</strong></p>
+      <p>画面下部の「↓ バックアップ」を押すと、個体データをファイルとして保存できます。</p>
+      <p><strong>データを元に戻す方法</strong></p>
+      <p>「↑ 復元」を押して、保存しておいたバックアップファイルを選んでください。</p>
+      <p>※復元すると、現在の個体データはバックアップの内容に置き換わります。</p>
+
+      <h3>⑦ 安心して使うために</h3>
+      <p>最初に1匹登録してからページを閉じ、再び開いたときにデータが残っているか確認してください。</p>
+      <p>サイトの更新や端末の変更をする前にも、バックアップを保存しておくと安心です。</p>
+      <div class="guide-warning"><strong>個体情報は、ほかの端末と自動同期されません。</strong></div>
+      <button type="button" class="btn primary" data-close="helpDialog" style="width:100%;margin-top:14px">確認しました・閉じる</button>
     </div>
   </dialog>
 
@@ -853,7 +924,7 @@
         weight: r?.weight === null || r?.weight === '' || r?.weight === undefined ? null : (Number.isFinite(Number(r.weight)) && Number(r.weight) >= 0 && Number(r.weight) <= 999.99 ? Math.round(Number(r.weight)*100)/100 : null),
         notes: String(r?.notes || '').slice(0, 3000),
         notes2: String(r?.notes2 || '').slice(0, 3000),
-        status: ['現役', '引退', '旅立ち'].includes(r?.status) ? r.status : '現役',
+        status: ['現役', '引退', '休養中', '旅立ち'].includes(r?.status) ? r.status : '現役',
         ratings: EMOJIS.map((_,i) => Math.max(1, Math.min(10, Number.isFinite(Number(r?.ratings?.[i])) ? Math.round(Number(r.ratings[i])) : 5))),
         strength: r?.strength === null || r?.strength === undefined || r?.strength === '' ? null : (Number.isFinite(Number(r.strength)) ? Math.max(1, Math.min(10, Math.round(Number(r.strength)))) : null),
         createdAt: Number.isFinite(Number(r?.createdAt)) ? Number(r.createdAt) : Date.now(),
@@ -889,7 +960,7 @@
     }
     function numberText(num) { return num === null || num === undefined ? '—' : Number(num).toLocaleString('ja-JP', {maximumFractionDigits: 1}); }
     function weightText(num) { return num === null || num === undefined ? '—' : Number(num).toFixed(2); }
-    function statusClass(status) { return status === '旅立ち' ? 'status-departed' : status === '引退' ? 'status-retired' : 'status-active'; }
+    function statusClass(status) { return status === '旅立ち' ? 'status-departed' : status === '引退' ? 'status-retired' : status === '休養中' ? 'status-resting' : 'status-active'; }
     function statLabel(i) { return LABELS[i]; }
     function barHTML(score, color) {
       return `<div class="bar" aria-hidden="true">${Array.from({length:10},(_,i)=>`<span class="segment ${i < score ? 'active ' + color : ''}"></span>`).join('')}</div>`;
@@ -1000,10 +1071,9 @@
       el('totalCount').textContent = app.records.length;
       const strengths = app.records.map(r => r.strength).filter(s => s !== null);
       el('avgStrength').textContent = strengths.length ? (strengths.reduce((a,b)=>a+b,0) / strengths.length).toFixed(1) : '—';
+      el('activeCount').textContent = app.records.filter(r => (r.status || '現役') === '現役').length;
       const speciesSet = [...new Set(app.records.map(r=>r.species))].sort((a,b)=>a.localeCompare(b,'ja'));
       el('speciesCount').textContent = speciesSet.length;
-      const sizes = app.records.map(r=>r.size).filter(n=>n!==null);
-      el('maxSize').textContent = sizes.length ? numberText(Math.max(...sizes)) : '—';
       el('listBadge').textContent = app.records.length + ' RECORDS';
       const selectedSpecies = el('speciesFilter').value;
       el('speciesFilter').innerHTML = `<option value="">すべての種類</option>` + speciesSet.map(species=>`<option value="${escapeAttribute(species)}">${esc(species)}</option>`).join('');
@@ -1028,12 +1098,12 @@
         return descending ? b.localeCompare(a, 'ja') : a.localeCompare(b, 'ja');
       };
       const ratingTotal = r => r.ratings.reduce((sum, value) => sum + value, 0);
-      const statusPosition = r => ({'現役': 0, '引退': 1, '旅立ち': 2})[r.status || '現役'] ?? 3;
+      const statusPosition = r => ({'現役': 0, '引退': 1, '休養中': 2, '旅立ち': 3})[r.status || '現役'] ?? 4;
       const tieBreak = (a, b) => b.createdAt - a.createdAt || a.id.localeCompare(b.id);
       // 元の「強さ順」などの値は維持し、過去の表示設定との互換性を残します。
       const sorters = {
-        strength: (a,b) => compareNumbers(a.strength, b.strength),
-        strengthAsc: (a,b) => compareNumbers(a.strength, b.strength, true),
+        strength: (a,b) => compareNumbers(a.strength, b.strength) || compareNumbers(ratingTotal(a), ratingTotal(b)),
+        strengthAsc: (a,b) => compareNumbers(a.strength, b.strength, true) || compareNumbers(ratingTotal(a), ratingTotal(b)),
         power: (a,b) => compareNumbers(a.ratings[0], b.ratings[0]),
         powerAsc: (a,b) => compareNumbers(a.ratings[0], b.ratings[0], true),
         technique: (a,b) => compareNumbers(a.ratings[1], b.ratings[1]),
@@ -1189,7 +1259,7 @@
       return lines.length ? lines : ['—'];
     }
     function sortedImageRecords() {
-      return [...app.records].sort((a,b)=>(b.strength??-1)-(a.strength??-1) || (b.size??-1)-(a.size??-1) || b.createdAt-a.createdAt);
+      return [...app.records].sort((a,b)=>(b.strength??-1)-(a.strength??-1) || b.ratings.reduce((sum,n)=>sum+n,0)-a.ratings.reduce((sum,n)=>sum+n,0) || (b.size??-1)-(a.size??-1) || b.createdAt-a.createdAt);
     }
     function recordImageLayout(ctx, rec) {
       const species=wrapped(ctx,'種類：'+rec.species,892,imgFont(26,600));
@@ -1258,7 +1328,7 @@
         ctx.fillStyle='#d5edbd';
         ctx.fillText(`体重：${weightText(r.weight)}${r.weight === null ? '' : 'g'}`,x+515,y+l.sizeAt);
         ctx.font=imgFont(23,800);
-        ctx.fillStyle=r.status==='旅立ち'?'#c7c1ea':r.status==='引退'?'#e8d0a1':'#bce99a';
+        ctx.fillStyle=r.status==='旅立ち'?'#c7c1ea':r.status==='引退'?'#e8d0a1':r.status==='休養中'?'#b9d9f5':'#bce99a';
         ctx.fillText(`状態：${r.status || '現役'}`,x+30,y+l.statusAt);
         const items=[['💪🏻 パワー',r.ratings[0],'#b4e778'],['🏓 テクニック',r.ratings[1],'#edbe7a'],['🫀 メンタル',r.ratings[2],'#eb958b']];
         const step=306;
