@@ -669,6 +669,332 @@
   flex: 0 0 48px;
   overflow-y: auto;
 }
+
+/* コンパクト表示：備考1／備考2を右側で上下2分割。表示見出しは付けない。 */
+.mini-card .mini-notes-dual {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 134px;
+  min-height: 134px;
+  max-height: 134px;
+  align-self: start;
+}
+.mini-card .mini-notes-dual .mini-note-half {
+  min-height: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 5px 6px;
+  color: #e1eadf;
+  font-size: 9.4px;
+  line-height: 11px;
+  font-weight: 500;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.mini-card .mini-notes-dual .mini-note-bottom {
+  border-top: 1px solid #3b5945;
+}
+.mini-card .mini-notes-dual .mini-note-half:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+@media (max-width: 640px) {
+  .mini-card .mini-notes-dual { height: 134px; min-height: 134px; max-height: 134px; padding: 0; }
+  .mini-card .mini-notes-dual .mini-note-half { padding: 5px 6px; font-size: 9.4px; line-height: 11px; }
+}
+@media (max-width: 360px) {
+  .mini-card .mini-notes-dual { padding: 0; }
+  .mini-card .mini-notes-dual .mini-note-half { padding: 5px 6px; font-size: 9.2px; line-height: 11px; }
+}
+
+/* コンパクト表示：体長・体重の左寄せ表示を維持しつつ、上の余白を縮める */
+.mini-card .mini-left {
+  gap: 6px;
+}
+.mini-card .mini-measures {
+  column-gap: 10px;
+  margin-top: 3px;
+  padding-top: 5px;
+}
+.mini-card .mini-measures > span:first-child {
+  justify-content: flex-end;
+  text-align: right;
+}
+.mini-card .mini-measures > span:nth-child(2) {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+/* 通常表示：サイズと体重の左右外側の余白を揃える。色は変更しない。 */
+.full-card .card-left .size-line {
+  padding-left: 8px;
+  padding-right: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.full-card .card-left .measure-item:first-child {
+  align-items: flex-start;
+  text-align: left;
+}
+.full-card .card-left .measure-item:last-child {
+  display: grid;
+  grid-template-columns: max-content;
+  justify-content: end;
+  justify-items: start;
+  align-content: start;
+  text-align: left;
+}
+.full-card .card-left .measure-item:last-child .measure-value {
+  justify-content: flex-start;
+}
+
+
+/* 微調整：通常表示の体重ラベルと数値をそろえたまま6px左へ */
+.full-card .card-left .measure-item:last-child {
+  transform: translateX(-6px);
+}
+/* コンパクト表示の体長ラベルを、数値の左端の真上にそろえる */
+.mini-card .mini-measures > span:first-child {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  grid-template-rows: auto auto;
+  justify-content: end;
+  justify-items: start;
+  align-content: end;
+  gap: 1px 2px;
+  text-align: left;
+}
+.mini-card .mini-measures > span:first-child > small:first-child {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  text-align: left;
+}
+.mini-card .mini-measures > span:first-child > strong {
+  grid-column: 1;
+  grid-row: 2;
+}
+.mini-card .mini-measures > span:first-child > small:last-child {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+
+/* 通常表示の備考欄：見出しは設けず、1枠を上下2段に分けて各5行表示。 */
+.full-card .card-note-stack {
+  display: grid;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  height: 153px;
+  min-height: 153px;
+  max-height: 153px;
+  margin-bottom: 12px;
+  align-self: start;
+  align-content: stretch;
+  overflow: hidden;
+  border: 1px solid #3b5945;
+  border-radius: 11px;
+  background: linear-gradient(150deg, #203328, #1a2820);
+}
+.full-card .card-note-stack .card-note-panel {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+}
+.full-card .card-note-stack .card-note-panel + .card-note-panel {
+  border-top: 1px solid #39513f;
+}
+.full-card .card-note-stack .card-note-content {
+  width: 100%;
+  font-size: 9.6px;
+  line-height: 12px;
+  height: 60px;
+  min-height: 60px;
+  max-height: 60px;
+  flex: 0 0 60px;
+  overflow-y: auto;
+}
+@media (max-width: 640px) {
+  .full-card .card-note-stack .card-note-panel {
+    padding: 7px 8px;
+  }
+}
+
+
+/* 個体写真入力：既存の配色を維持 */
+.photo-editor-field .photo-file-input {padding:10px 8px;max-width:100%;height:auto;min-height:42px;}
+.photo-editor-preview-row {display:flex;gap:12px;align-items:flex-start;min-height:24px;}
+.photo-editor-preview {display:block;max-width:110px;width:110px;max-height:126px;object-fit:contain;border:1px solid #3b5945;border-radius:9px;background:#111c17;}
+.photo-editor-side {min-width:0;display:flex;flex-direction:column;gap:7px;align-items:flex-start;}
+.photo-editor-side small {line-height:1.55;}
+
+
+/* 個体カード上に写真を重ねるため、通常・コンパクト本来のレイアウトは変えません。 */
+.beetle-card {position:relative;touch-action:pan-y;}
+.card-photo-overlay {
+  position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;
+  min-width:0;gap:8px;padding:11px;background:var(--surface);
+  border:1px solid var(--line);border-radius:inherit;
+}
+.card-photo-content {
+  flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;background:#111c17;border:1px solid #304637;border-radius:10px;padding:6px;
+}
+.card-photo-image {display:block;max-width:100%;max-height:100%;width:auto;height:auto;aspect-ratio:1/1;object-fit:contain;border-radius:7px;user-select:none;-webkit-user-drag:none;}
+.card-photo-empty {display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:8px;color:#b7cbb9;font-size:11px;line-height:1.5;}
+.card-photo-empty strong {color:#f1f5ed;font-size:12px;}
+.card-photo-controls {display:flex;flex-wrap:nowrap;justify-content:center;gap:6px;flex:0 0 auto;}
+.card-photo-controls .btn {min-height:30px;padding:5px 8px;font-size:10px;flex:1 1 auto;}
+.photo-swipe-help {margin-top:-3px;margin-bottom:12px;}
+@media(max-width:640px) {.photo-swipe-help {font-size:10px;}}
+
+
+/* プロフィール画像のように、正方形の枠内で拡大・ドラッグして位置を調整。 */
+.photo-crop-dialog {width:min(510px,calc(100vw - 20px));max-height:95dvh;}
+.photo-crop-dialog .crop-dialog-body {display:flex;flex-direction:column;gap:12px;align-items:stretch;}
+.photo-crop-surface {
+  position:relative;overflow:hidden;max-width:min(100%,360px);width:100%;
+  margin:0 auto;aspect-ratio:1/1;border:2px solid var(--accent);
+  border-radius:10px;background:#111c17;box-shadow:0 9px 28px rgba(0,0,0,.25);
+}
+#photoCropCanvas {
+  width:100%;height:100%;display:block;touch-action:none;
+  cursor:grab;user-select:none;-webkit-user-select:none;
+}
+#photoCropCanvas:active{cursor:grabbing;}
+.photo-crop-corner{position:absolute;width:18px;height:18px;border-color:#d4ffaf;pointer-events:none;}
+.photo-crop-corner.top-left{top:1px;left:1px;border-top:3px solid;border-left:3px solid;}
+.photo-crop-corner.top-right{top:1px;right:1px;border-top:3px solid;border-right:3px solid;}
+.photo-crop-corner.bottom-left{bottom:1px;left:1px;border-bottom:3px solid;border-left:3px solid;}
+.photo-crop-corner.bottom-right{bottom:1px;right:1px;border-bottom:3px solid;border-right:3px solid;}
+.photo-crop-instructions{margin:0;font-size:11px;line-height:1.6;color:#bdcdbd;text-align:center;}
+.photo-crop-zoom-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#dcebd6;font-weight:750;}
+.photo-crop-zoom-value{font-variant-numeric:tabular-nums;color:var(--accent);}
+.photo-crop-zoom-controls{display:flex;align-items:center;gap:12px;color:#bbd6a8;}
+.photo-crop-zoom-controls input{flex:1;width:100%;accent-color:var(--accent);touch-action:pan-y;}
+.photo-crop-actions{display:flex;gap:8px;}
+.photo-crop-actions .btn{flex:1;min-width:0;padding:10px 9px;}
+@media(max-width:420px){
+  .photo-crop-dialog .dialog-head{padding:14px 16px 10px;}
+  .photo-crop-dialog .dialog-body{padding:12px 15px 18px;gap:9px;}
+  .photo-crop-instructions{font-size:10px;}
+  .photo-crop-actions .btn{font-size:11px;}
+}
+
+
+/* コンパクト写真面：左側に強さ・３能力の数値とゲージ、右側に正方形写真 */
+.mini-card.compact-photo-open { min-height: 230px; }
+.mini-card .card-photo-content.compact-photo-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+}
+.compact-photo-stats {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  align-content: center;
+}
+.compact-photo-stat {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+.compact-photo-stat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 3px;
+  min-width: 0;
+}
+.compact-photo-stat-label {
+  min-width: 0;
+  color: #e3eddf;
+  font-size: 8.8px;
+  font-weight: 780;
+  white-space: nowrap;
+  letter-spacing: -.04em;
+}
+.compact-photo-stat-value {
+  flex: none;
+  font-size: 9.2px;
+  font-weight: 850;
+  color: #f0f5e9;
+  font-variant-numeric: tabular-nums;
+}
+.compact-photo-stat.strength .compact-photo-stat-value { color: #ffe0a0; }
+.compact-photo-stat .bar {
+  grid-template-columns: repeat(10,minmax(0,1fr));
+  gap: 1.5px;
+  height: 5px;
+  min-width: 0;
+}
+.compact-photo-square {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: #111c17;
+  border: 1px solid #3b5945;
+  border-radius: 8px;
+}
+.compact-photo-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.compact-photo-square.is-empty {
+  border-style: dashed;
+  background: #19261f;
+}
+.compact-photo-placeholder {
+  color: #899f8f;
+  opacity: .75;
+  font-size: 11px;
+  font-weight: 650;
+}
+.mini-card .card-photo-controls .btn {
+  font-size: 10px;
+  padding: 6px 7px;
+}
+@media (max-width: 360px) {
+  .mini-card .card-photo-content.compact-photo-content { gap: 5px; padding: 6px; }
+  .compact-photo-stats { gap: 5px; }
+  .compact-photo-stat-label { font-size: 8.2px; }
+  .compact-photo-stat-value { font-size: 8.6px; }
+  .compact-photo-stat .bar { gap: 1px; }
+  .mini-card .card-photo-controls .btn { font-size: 9px; padding: 6px 4px; }
+}
+
+
+/* 1匹ごとの画像保存ボタン（通常表示・コンパクト表示共通） */
+.full-card .card-actions {gap:7px;}
+.full-card .card-actions .btn {min-width:0;padding-left:6px;padding-right:6px;font-size:12px;}
+.single-image-save {border-color:#69865f;color:#daf3c9;}
+@media(max-width:390px) {
+  .full-card .card-actions {gap:5px;}
+  .full-card .card-actions .btn {font-size:10.5px;padding:8px 4px;}
+}
+
 </style>
 </head>
 <body>
@@ -704,7 +1030,7 @@
     <div id="storageWarning" class="storage-warning hidden" role="alert">⚠ このブラウザでは自動保存ができません。データを失わないように、ページ下部の「バックアップ」からファイルを保存してください。</div>
 
     <section aria-labelledby="listTitle">
-      <div class="sectionhead"><h2 id="listTitle">個体一覧</h2><span class="count" id="listBadge">0 RECORDS</span><button class="btn small image-export-button" id="exportImage" type="button">▣ 全個体を画像保存</button></div>
+      <div class="sectionhead"><h2 id="listTitle">個体一覧</h2><span class="count" id="listBadge">0 RECORDS</span></div>
       <div class="tools">
         <div class="search"><span class="search-symbol" aria-hidden="true">⌕</span><input class="field-control" type="search" id="search" placeholder="名前・種類・備考1・備考2で検索" aria-label="名前・種類・備考1・備考2で検索" /></div>
         <select class="field-control" id="speciesFilter" aria-label="種類で絞り込む"><option value="">すべての種類</option></select>
@@ -753,7 +1079,8 @@
           <button type="button" class="view-button" id="viewCompact" aria-pressed="false">☷ コンパクト</button>
         </div>
       </div>
-      <p class="view-hint hidden" id="viewHint">コンパクトは名前・種類・体長・体重・状態・強さの数値・備考1だけを表示。タップすると編集できます。</p>
+      <p class="view-hint hidden" id="viewHint">コンパクトは名前・種類・体長・体重・状態・強さの数値・備考1・備考2を表示。右側の上下の枠は備考1／備考2です。カードをタップすると編集できます。左スワイプ後は左に4つのパラメータ、右に正方形写真を表示します。</p>
+      <p class="view-hint photo-swipe-help">左スワイプで写真表示・右スワイプで個体情報へ戻る（写真は「編集」から登録）</p>
       <div id="cards" class="grid" aria-live="polite"></div>
       <div id="empty" class="empty hidden">
         <div class="empty-icon" aria-hidden="true"></div>
@@ -782,11 +1109,20 @@
       <div class="form-grid">
         <div class="field full"><label for="speciesInput">種類 <span aria-hidden="true" style="color:#a9df78">*</span></label><input class="field-control" id="speciesInput" name="species" required maxlength="100" placeholder="例：オオクワガタ" list="speciesOptions" autocomplete="off" /><datalist id="speciesOptions"></datalist></div>
         <div class="field full"><label for="nameInput">名前</label><input class="field-control" id="nameInput" name="name" maxlength="100" placeholder="例：クロ" /></div>
-        <div class="field"><label for="sizeInput">サイズ（mm）</label><input class="field-control" id="sizeInput" name="size" type="number" inputmode="decimal" step="0.1" min="0.1" max="999.9" placeholder="例：78.5" /></div>
+        <div class="field"><label for="sizeInput">サイズ（mm）</label><input class="field-control" id="sizeInput" name="size" type="number" inputmode="decimal" step="0.1" min="0.1" max="999.9" placeholder="例：78.5" /><small>0.1mm単位・小数点以下1桁で記録</small></div>
         <div class="field"><label for="weightInput">体重（g）</label><input class="field-control" id="weightInput" name="weight" type="number" inputmode="decimal" step="0.01" min="0" max="999.99" placeholder="例：2.35" /><small>0.01g単位・未計測なら空欄</small></div>
         <div class="field full"><label for="statusInput">状態</label><select class="field-control" id="statusInput" name="status" required><option value="現役">現役</option><option value="引退">引退</option><option value="休養中">休養中</option><option value="旅立ち">旅立ち</option></select><small>各個体の現在の状態を選んでください。あとから変更できます。</small></div>
         <div class="field full"><label for="notesInput">備考1</label><textarea class="field-control" id="notesInput" name="notes" maxlength="3000" placeholder="性格、特徴、採集日、産地、飼育メモなど"></textarea></div>
         <div class="field full"><label for="notes2Input">備考2</label><textarea class="field-control" id="notes2Input" name="notes2" maxlength="3000" placeholder="追加メモ、補足、飼育記録など"></textarea></div>
+        <div class="field full photo-editor-field">
+          <label for="photoInput">個体写真（1匹につき1枚）</label>
+          <input class="field-control photo-file-input" type="file" id="photoInput" accept="image/*" />
+          <div class="photo-editor-preview-row">
+            <img id="photoEditPreview" class="photo-editor-preview hidden" alt="個体写真のプレビュー" />
+            <div class="photo-editor-side"><small id="photoEditStatus" role="status" aria-live="polite">写真は未登録です。</small><button type="button" class="btn small danger hidden" id="photoRemove">写真を削除</button></div>
+          </div>
+          <small>写真を選ぶと正方形の切り抜き画面が開きます。指で位置を動かしたり、拡大・縮小できます。確定後はJPEGに圧縮して端末内に保存します。写真はJSONバックアップにも含まれます。</small>
+        </div>
       </div>
       <h3 class="ratings-heading">総合的な強さ <span class="ratings-note">1〜10段階</span></h3>
       <p class="strength-explain">★ 強さは、下の3つの能力から自動計算せず、個体ごとに自由に設定できます。</p>
@@ -827,15 +1163,15 @@
       <p><strong>強さは4項目をそれぞれ1〜10で設定できます。</strong></p>
       <ul><li>★ 総合的な強さ</li><li>💪🏻 パワー</li><li>🏓 テクニック</li><li>🫀 メンタル</li></ul>
       <p>総合的な強さは、ほかの3項目とは別に自由に設定できます。</p>
-      <p>入力が終わったら「登録する」を押してください。</p>
+      <p>写真は個体ごとに1枚まで登録できます。選んだ写真を正方形の枠内で移動・拡大して切り抜き、端末内でJPEGに圧縮します。</p><p>入力が終わったら「登録する」を押してください。</p>
 
       <h3>③ 登録した個体を見る・編集する</h3>
       <p>個体一覧には、2種類の表示方法があります。</p>
       <p><strong>通常表示</strong></p>
-      <p>個体の情報や4つの能力、備考1・備考2を確認できます。「編集」「削除」ボタンも使えます。</p>
+      <p>個体の情報や4つの能力を確認できます。右側は上段が備考1、下段が備考2で、それぞれ5行分を表示します。「編集」「削除」ボタンも使えます。</p>
       <p><strong>コンパクト表示</strong></p>
-      <p>名前・種類・状態・強さ・サイズ・体重・備考1を簡単に確認できます。</p>
-      <p>カードをタップすると編集画面が開きます。※備考欄をタップした場合は開きません。</p>
+      <p>名前・種類・状態・強さ・サイズ・体重と、右側に上下2段で備考1・備考2を簡単に確認できます。</p>
+      <p>カードをタップすると編集画面が開きます。※備考欄をタップした場合は開きません。通常・コンパクトとも左スワイプで写真表示、右スワイプで個体情報に戻れます。コンパクトの写真面では左側に4つのパラメータ、右側に正方形写真を表示します。</p>
 
       <h3>④ 個体を検索・並べ替える</h3>
       <p>名前や種類、備考の文章から個体を検索できます。</p>
@@ -843,19 +1179,18 @@
       <p>並べ替えでは、強さ・パワー・テクニック・メンタル・サイズなどを選べます。</p>
       <p><strong>強さが同点の場合は、パワー・テクニック・メンタルの合計が高い個体が上に表示されます。</strong></p>
 
-      <h3>⑤ 個体一覧を画像で保存する</h3>
-      <p>「全個体を画像保存」を押すと、登録した個体を画像にまとめられます。</p>
-      <p>1枚につき最大5匹ずつ表示され、個体が多い場合は複数枚に分かれます。</p>
-      <p>作成した画像は、LINEなどで共有できます。</p>
-      <p>iPhoneでは、画像を長押しして保存することもできます。</p>
-      <p>※画像から個体データを復元することはできません。</p>
+      <h3>⑤ 個体を1匹ずつ画像保存する</h3>
+      <p>通常表示の各個体カードにある「▣ 画像保存」を押すと、その個体だけの共有用画像を作成します。コンパクト表示ではボタンを表示せず、カードを小さくしています。</p>
+      <p>画像は左上に個体情報、右上に正方形の写真、中央に総合的な強さ・パワー・テクニック・メンタル、左下に備考1、右下に備考2を表示します。備考の見出し文字は画像に表示しません。</p>
+      <p>写真を未登録の場合も写真の枠を空欄として保存できます。iPhoneではプレビュー画像を長押しして保存できます。</p>
+      <p>※画像から個体データを復元することはできません。JSONバックアップは別途保存してください。</p>
 
       <h3>⑥ データをバックアップする【重要】</h3>
       <p>登録した情報は、基本的に使用中のブラウザ内に保存されます。</p>
       <p>ただし、別のスマホやブラウザには自動で引き継がれません。また、開き方によっては保存ができない場合があります。</p>
       <p>大切な個体データを守るため、<strong>定期的にバックアップを保存してください。</strong></p>
       <p><strong>バックアップの保存方法</strong></p>
-      <p>画面下部の「↓ バックアップ」を押すと、個体データをファイルとして保存できます。</p>
+      <p>画面下部の「↓ バックアップ」を押すと、写真を含む個体データをファイルとして保存できます。ファイル名は「トレーナー名_日付_個体情報.json」です。</p>
       <p><strong>データを元に戻す方法</strong></p>
       <p>「↑ 復元」を押して、保存しておいたバックアップファイルを選んでください。</p>
       <p>※復元すると、現在の個体データはバックアップの内容に置き換わります。</p>
@@ -868,14 +1203,50 @@
     </div>
   </dialog>
 
+
+  <dialog class="dialog photo-crop-dialog" id="photoCropDialog" aria-labelledby="photoCropTitle">
+    <div class="dialog-head">
+      <div><h2 class="dialog-title" id="photoCropTitle">個体写真を調整する</h2>
+      <p class="dialog-description">正方形の範囲を決めてから写真を登録します。</p></div>
+      <button type="button" class="close" id="photoCropClose" aria-label="写真の調整をキャンセル">×</button>
+    </div>
+    <div class="dialog-body crop-dialog-body">
+      <div class="photo-crop-surface">
+        <canvas id="photoCropCanvas" width="360" height="360" aria-label="写真の正方形の切り抜き範囲。ドラッグで移動、ピンチで拡大縮小"></canvas>
+        <div class="photo-crop-corner top-left" aria-hidden="true"></div>
+        <div class="photo-crop-corner top-right" aria-hidden="true"></div>
+        <div class="photo-crop-corner bottom-left" aria-hidden="true"></div>
+        <div class="photo-crop-corner bottom-right" aria-hidden="true"></div>
+      </div>
+      <p class="photo-crop-instructions">写真を指で動かして位置を調整。2本指のピンチ、または下のバーで拡大・縮小できます。</p>
+      <div class="photo-crop-zoom-row">
+        <label for="photoCropZoom">拡大率</label>
+        <span class="photo-crop-zoom-value" id="photoCropZoomValue">1.00×</span>
+      </div>
+      <div class="photo-crop-zoom-controls">
+        <span aria-hidden="true">－</span>
+        <input type="range" id="photoCropZoom" min="100" max="500" step="1" value="100" aria-label="写真の拡大率" />
+        <span aria-hidden="true">＋</span>
+      </div>
+      <p class="photo-crop-instructions">決定すると正方形のJPEGに圧縮されます。<strong>最後に個体情報の「登録する／変更を保存」を押すと保存完了です。</strong></p>
+      <div class="photo-crop-actions">
+        <button type="button" class="btn" id="photoCropCancel">キャンセル</button>
+        <button type="button" class="btn primary" id="photoCropApply">この範囲で決定</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog class="dialog image-dialog" id="imageDialog" aria-labelledby="imageDialogTitle">
-    <div class="dialog-head"><div><h2 class="dialog-title" id="imageDialogTitle">クワガタ全個体の一覧画像</h2><p class="dialog-description">登録済みの全個体を、総合的な強さが高い順に画像化します。</p></div><button type="button" class="close" data-close="imageDialog" aria-label="閉じる">×</button></div>
+    <div class="dialog-head">
+      <div><h2 class="dialog-title" id="imageDialogTitle">個体画像の保存</h2>
+        <p class="dialog-description">選んだ1体だけを画像にします。</p></div>
+      <button type="button" class="close" data-close="imageDialog" aria-label="閉じる">×</button>
+    </div>
     <div class="image-body">
-      <p class="image-description" id="imageInstructions">画像を保存すると、LINEなどで共有できます。iPhoneでは画像を長押しして「写真に保存」も利用できます。</p>
-      <img id="imagePreview" class="image-preview" alt="クワガタの個体情報を強さ順にまとめた画像" />
-      <div class="image-page-controls"><button class="btn small" id="imagePrev" type="button">← 前の画像</button><span class="image-page-number" id="imagePageNumber"></span><button class="btn small" id="imageNext" type="button">次の画像 →</button></div>
-      <button class="btn primary image-download" type="button" id="imageDownload">↓ このPNG画像を保存</button>
-      <p class="image-description" style="margin-top:10px">※ 個体が多い場合は複数枚に分かれます。すべてのページを保存してください。画像は閲覧・共有用です。</p>
+      <p class="image-description" id="imageInstructions" role="status" aria-live="polite">個体画像を作成しています…</p>
+      <img id="imagePreview" class="image-preview hidden" alt="選んだ個体の共有用画像" />
+      <button class="btn primary image-download" type="button" id="imageDownload" disabled>↓ この個体のPNG画像を保存</button>
+      <p class="image-description" style="margin-top:10px">iPhoneでは画像を長押しして「写真に保存」も利用できます。画像から個体データを復元することはできません。</p>
     </div>
   </dialog>
 
@@ -895,6 +1266,10 @@
     const escapeAttribute = esc;
     let app = { version: 3, trainerName: '', records: [] };
     let editingId = null;
+    let photoDraft = null;
+    let photoJob = 0;
+    let photoBusy = false;
+    const PHOTO_LIMIT = 110000;
     let viewMode = 'full';
     try { viewMode = localStorage.getItem(VIEW_KEY) === 'compact' ? 'compact' : 'full'; } catch (_) { /* private browsing etc */ }
     function setViewMode(mode) {
@@ -915,15 +1290,20 @@
         }
       } catch (err) { hasStorageError = true; console.warn('データの読み込みに失敗しました', err); }
     }
+    function validPhotoData(value) {
+      return typeof value === 'string' && value.length <= PHOTO_LIMIT &&
+        /^data:image\/jpeg;base64,[a-zA-Z0-9+/]+={0,2}$/.test(value) ? value : null;
+    }
     function cleanData(data) {
       const cleanRecord = (r, index) => ({
         id: String(r?.id || newId() + '-' + index),
         species: String(r?.species || '').trim().slice(0, 100),
         name: String(r?.name || '').trim().slice(0, 100),
-        size: r?.size === null || r?.size === '' || r?.size === undefined ? null : (Number.isFinite(Number(r.size)) && Number(r.size) > 0 && Number(r.size) <= 999.9 ? Number(r.size) : null),
+        size: r?.size === null || r?.size === '' || r?.size === undefined ? null : (Number.isFinite(Number(r.size)) && Number(r.size) > 0 && Number(r.size) <= 999.9 ? Math.round(Number(r.size) * 10) / 10 : null),
         weight: r?.weight === null || r?.weight === '' || r?.weight === undefined ? null : (Number.isFinite(Number(r.weight)) && Number(r.weight) >= 0 && Number(r.weight) <= 999.99 ? Math.round(Number(r.weight)*100)/100 : null),
         notes: String(r?.notes || '').slice(0, 3000),
         notes2: String(r?.notes2 || '').slice(0, 3000),
+        photo: validPhotoData(r?.photo),
         status: ['現役', '引退', '休養中', '旅立ち'].includes(r?.status) ? r.status : '現役',
         ratings: EMOJIS.map((_,i) => Math.max(1, Math.min(10, Number.isFinite(Number(r?.ratings?.[i])) ? Math.round(Number(r.ratings[i])) : 5))),
         strength: r?.strength === null || r?.strength === undefined || r?.strength === '' ? null : (Number.isFinite(Number(r.strength)) ? Math.max(1, Math.min(10, Math.round(Number(r.strength)))) : null),
@@ -958,7 +1338,7 @@
       const node = el('toast'); node.textContent = message; node.classList.add('shown');
       clearTimeout(toastTimer); toastTimer = setTimeout(() => node.classList.remove('shown'), 3400);
     }
-    function numberText(num) { return num === null || num === undefined ? '—' : Number(num).toLocaleString('ja-JP', {maximumFractionDigits: 1}); }
+    function numberText(num) { return num === null || num === undefined ? '—' : Number(num).toLocaleString('ja-JP', {minimumFractionDigits: 1, maximumFractionDigits: 1}); }
     function weightText(num) { return num === null || num === undefined ? '—' : Number(num).toFixed(2); }
     function statusClass(status) { return status === '旅立ち' ? 'status-departed' : status === '引退' ? 'status-retired' : status === '休養中' ? 'status-resting' : 'status-active'; }
     function statLabel(i) { return LABELS[i]; }
@@ -981,12 +1361,10 @@
           ${cardMeasurementsHTML(rec)}
         </div>
         <div class="card-note-stack">
-          <aside class="card-note-panel" role="region" aria-label="備考1">
-            <div class="card-note-heading">備考1</div>
+          <aside class="card-note-panel" role="region" aria-label="備考1（上段）">
             <div class="card-note-content ${notes ? '' : 'card-note-empty'}" tabindex="0">${esc(notes || ' ')}</div>
           </aside>
-          <aside class="card-note-panel" role="region" aria-label="備考2">
-            <div class="card-note-heading">備考2</div>
+          <aside class="card-note-panel" role="region" aria-label="備考2（下段）">
             <div class="card-note-content ${notes2 ? '' : 'card-note-empty'}" tabindex="0">${esc(notes2 || ' ')}</div>
           </aside>
         </div>
@@ -994,7 +1372,7 @@
     }
     function cardMeasurementsHTML(rec) {
       return `<div class="size-line">
-        <div class="measure-item"><span class="size-label">サイズ</span><div class="measure-value"><span class="size-number">${numberText(rec.size)}</span><span class="size-unit">${rec.size === null ? '' : 'mm'}</span></div></div>
+        <div class="measure-item"><span class="size-label">体長</span><div class="measure-value"><span class="size-number">${numberText(rec.size)}</span><span class="size-unit">${rec.size === null ? '' : 'mm'}</span></div></div>
         <div class="measure-item"><span class="size-label">体重</span><div class="measure-value"><span class="size-number weight-number">${weightText(rec.weight)}</span><span class="size-unit">${rec.weight === null ? '' : 'g'}</span></div></div>
       </div>`;
     }
@@ -1003,7 +1381,7 @@
       return `<article class="beetle-card full-card">
         ${cardUpperHTML(rec)}
         ${fullStatsHTML(rec)}
-        <div class="card-actions"><button class="btn small" type="button" data-action="edit" data-id="${escapeAttribute(rec.id)}">✎ 編集</button><button class="btn small danger" type="button" data-action="delete" data-id="${escapeAttribute(rec.id)}">削除</button></div>
+        <div class="card-actions"><button class="btn small single-image-save" type="button" data-action="image" data-id="${escapeAttribute(rec.id)}">▣ 画像保存</button><button class="btn small" type="button" data-action="edit" data-id="${escapeAttribute(rec.id)}">✎ 編集</button><button class="btn small danger" type="button" data-action="delete" data-id="${escapeAttribute(rec.id)}">削除</button></div>
       </article>`;
     }
     function fullStatsHTML(rec) {
@@ -1020,10 +1398,11 @@
         </div>`
       ).join('')}</div>`;
     }
-    // コンパクト表示: 基本情報と強さの数値、備考1のみを短いカードに集約。
+    // コンパクト表示: 基本情報・強さと上下2段の備考1/備考2を短いカードに集約。
     function compactRecordHTML(rec) {
       const name = rec.name || '名前未設定';
       const notes = String(rec.notes || '').trim();
+      const notes2 = String(rec.notes2 || '').trim();
       return `<article class="beetle-card compact-card mini-card" role="button" tabindex="0" data-compact-id="${escapeAttribute(rec.id)}" aria-label="${escapeAttribute(name)}を編集する">
         <div class="mini-summary">
           <div class="mini-left">
@@ -1038,9 +1417,9 @@
               <span><small>体重</small><strong>${weightText(rec.weight)}</strong><small>${rec.weight === null ? '' : 'g'}</small></span>
             </div>
           </div>
-          <aside class="mini-note" role="region" aria-label="備考1">
-            <div class="mini-note-heading">備考1</div>
-            <div class="mini-note-body ${notes ? '' : 'card-note-empty'}" tabindex="0">${esc(notes || ' ')}</div>
+          <aside class="mini-note mini-notes-dual" role="group" aria-label="備考1と備考2">
+            <div class="mini-note-half mini-note-top ${notes ? '' : 'card-note-empty'}" role="region" aria-label="備考1" tabindex="0">${esc(notes || ' ')}</div>
+            <div class="mini-note-half mini-note-bottom ${notes2 ? '' : 'card-note-empty'}" role="region" aria-label="備考2" tabindex="0">${esc(notes2 || ' ')}</div>
           </aside>
         </div>
       </article>`;
@@ -1156,6 +1535,248 @@
         </div>`).join('');
       scores.forEach((_,i)=>el('ratingInput'+i).addEventListener('input',e=> { el('ratingValue'+i).innerHTML = `${e.target.value} <small>/ 10</small>`; }));
     }
+
+
+    // 正方形トリミング。画質とファイルサイズは登録確定後に自動調整。
+    const CROP_SIZE = 360;
+    const CROP_MIN_ZOOM = 1;
+    const CROP_MAX_ZOOM = 5;
+    let crop = null;             // {image,width,height,zoom,offsetX,offsetY}
+    let cropPointers = new Map();
+    let cropPinch = null;
+    let cropSelectionJob = 0;
+    let cropSaving = false;
+
+    function cropClamp(value,min,max) {return Math.max(min,Math.min(max,value));}
+    function cropNaturalScale() {
+      return crop ? Math.max(CROP_SIZE / crop.width,CROP_SIZE / crop.height) : 1;
+    }
+    function cropBounds() {
+      const scale = cropNaturalScale() * crop.zoom;
+      return {
+        width: crop.width * scale,
+        height: crop.height * scale,
+        scale
+      };
+    }
+    function clampCropOffset() {
+      if (!crop) return;
+      const box = cropBounds();
+      crop.offsetX = cropClamp(crop.offsetX, -(box.width - CROP_SIZE)/2, (box.width - CROP_SIZE)/2);
+      crop.offsetY = cropClamp(crop.offsetY, -(box.height - CROP_SIZE)/2, (box.height - CROP_SIZE)/2);
+    }
+    function renderCrop() {
+      if (!crop) return;
+      clampCropOffset();
+      const canvas = el('photoCropCanvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const box = cropBounds();
+      ctx.clearRect(0,0,CROP_SIZE,CROP_SIZE);
+      ctx.fillStyle = '#111c17';
+      ctx.fillRect(0,0,CROP_SIZE,CROP_SIZE);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(crop.image,(CROP_SIZE-box.width)/2+crop.offsetX,(CROP_SIZE-box.height)/2+crop.offsetY,box.width,box.height);
+      ctx.lineWidth=1;
+      ctx.strokeStyle='rgba(255,255,255,.28)';
+      for(let i=1;i<3;i++){
+        const at = i*CROP_SIZE/3;
+        ctx.beginPath();ctx.moveTo(at,0);ctx.lineTo(at,CROP_SIZE);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(0,at);ctx.lineTo(CROP_SIZE,at);ctx.stroke();
+      }
+      el('photoCropZoom').value=String(Math.round(crop.zoom*100));
+      el('photoCropZoomValue').textContent=crop.zoom.toFixed(2)+'×';
+    }
+    function cropPointToCanvas(clientX,clientY) {
+      const rect = el('photoCropCanvas').getBoundingClientRect();
+      return {
+        x: (clientX-rect.left)*CROP_SIZE/Math.max(rect.width,1),
+        y: (clientY-rect.top)*CROP_SIZE/Math.max(rect.height,1)
+      };
+    }
+    function cropPinchSnapshot() {
+      const points=[...cropPointers.values()];
+      if(!crop || points.length!==2) return null;
+      const a=cropPointToCanvas(points[0].x,points[0].y);
+      const b=cropPointToCanvas(points[1].x,points[1].y);
+      const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      const rendered=cropBounds();
+      const originX=(CROP_SIZE-rendered.width)/2+crop.offsetX;
+      const originY=(CROP_SIZE-rendered.height)/2+crop.offsetY;
+      return {
+        distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),
+        zoom:crop.zoom,
+        relX:(mid.x-originX)/rendered.width,
+        relY:(mid.y-originY)/rendered.height
+      };
+    }
+    function cropMove(event) {
+      if(!crop || !cropPointers.has(event.pointerId)) return;
+      event.preventDefault();
+      const old=cropPointers.get(event.pointerId);
+      cropPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+      if(cropPointers.size===1){
+        const a=cropPointToCanvas(old.x,old.y);
+        const b=cropPointToCanvas(event.clientX,event.clientY);
+        crop.offsetX+=b.x-a.x;
+        crop.offsetY+=b.y-a.y;
+      }else if(cropPointers.size===2 && cropPinch){
+        const pts=[...cropPointers.values()];
+        const a=cropPointToCanvas(pts[0].x,pts[0].y);
+        const b=cropPointToCanvas(pts[1].x,pts[1].y);
+        const mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+        const dist=Math.max(1,Math.hypot(a.x-b.x,a.y-b.y));
+        crop.zoom=cropClamp(cropPinch.zoom*dist/cropPinch.distance,CROP_MIN_ZOOM,CROP_MAX_ZOOM);
+        const size=cropBounds();
+        crop.offsetX=mid.x-cropPinch.relX*size.width-(CROP_SIZE-size.width)/2;
+        crop.offsetY=mid.y-cropPinch.relY*size.height-(CROP_SIZE-size.height)/2;
+      }
+      renderCrop();
+    }
+    function cropPointerDown(event){
+      if(!crop)return;
+      event.preventDefault();
+      el('photoCropCanvas').setPointerCapture(event.pointerId);
+      cropPointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
+      cropPinch=cropPointers.size===2?cropPinchSnapshot():null;
+    }
+    function cropPointerEnd(event){
+      cropPointers.delete(event.pointerId);
+      cropPinch=cropPointers.size===2?cropPinchSnapshot():null;
+    }
+    function cropZoomFromSlider(event) {
+      if(!crop)return;
+      crop.zoom=cropClamp(Number(event.target.value)/100,CROP_MIN_ZOOM,CROP_MAX_ZOOM);
+      renderCrop();
+    }
+    function cropZoomFromWheel(event) {
+      if(!crop)return;
+      event.preventDefault();
+      crop.zoom=cropClamp(crop.zoom*(event.deltaY<0?1.07:1/1.07),CROP_MIN_ZOOM,CROP_MAX_ZOOM);
+      renderCrop();
+    }
+    function squareJPEGFromCrop() {
+      if(!crop)throw new Error('写真を選択してください。');
+      const canvas=document.createElement('canvas');
+      for(const outputSize of [520,480,420,360,300]){
+        canvas.width=outputSize;canvas.height=outputSize;
+        const ctx=canvas.getContext('2d');
+        if(!ctx)throw new Error('画像を作れないブラウザです。');
+        ctx.fillStyle='#ffffff';ctx.fillRect(0,0,outputSize,outputSize);
+        ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+        const bounds=cropBounds();
+        const f=outputSize/CROP_SIZE;
+        ctx.drawImage(crop.image,((CROP_SIZE-bounds.width)/2+crop.offsetX)*f,((CROP_SIZE-bounds.height)/2+crop.offsetY)*f,bounds.width*f,bounds.height*f);
+        for(const quality of [0.76,0.68,0.60,0.52,0.43]){
+          const jpeg=canvas.toDataURL('image/jpeg',quality);
+          if(jpeg.startsWith('data:image/jpeg;base64,') && jpeg.length<=PHOTO_LIMIT) return jpeg;
+        }
+      }
+      throw new Error('写真の圧縮に失敗しました。違う写真をお試しください。');
+    }
+    function discardCrop() {
+      cropSelectionJob++;
+      crop=null;
+      cropPointers.clear();
+      cropPinch=null;
+      cropSaving=false;
+      photoBusy=false;
+      el('photoCropApply').disabled=false;
+      el('saveRecord').disabled=false;
+      el('photoInput').value='';
+      updatePhotoEditor();
+    }
+    function cancelCrop() {
+      if(el('photoCropDialog').open)el('photoCropDialog').close();
+      else discardCrop();
+    }
+    function applyCrop() {
+      if(!crop || cropSaving)return;
+      cropSaving=true;
+      el('photoCropApply').disabled=true;
+      try {
+        const result=squareJPEGFromCrop();
+        photoDraft=result;
+        updatePhotoEditor();
+        el('photoCropDialog').close();
+        toast('写真の切り抜きを決定しました。個体情報の保存ボタンを押してください。');
+      } catch(error) {
+        toast(error.message || '写真を保存できませんでした。');
+        console.warn(error);
+      } finally {
+        cropSaving=false;
+        el('photoCropApply').disabled=false;
+      }
+    }
+
+    function updatePhotoEditor() {
+      const preview = el('photoEditPreview');
+      const has = !!photoDraft;
+      preview.classList.toggle('hidden',!has);
+      el('photoRemove').classList.toggle('hidden',!has);
+      if(has) {
+        preview.src=photoDraft;
+        el('photoEditStatus').textContent = '登録写真（圧縮後：約' + Math.round(photoDraft.length*0.75/1024) + 'KB、正方形）';
+      }else{
+        preview.removeAttribute('src');
+        el('photoEditStatus').textContent='写真は未登録です。';
+      }
+    }
+    async function choosePhoto(event) {
+      const file=event.target.files && event.target.files[0];
+      if(!file)return;
+      const job=++cropSelectionJob;
+      photoBusy=true;
+      el('saveRecord').disabled=true;
+      el('photoEditStatus').textContent='写真を読み込んでいます…';
+      try {
+        if(file.size>35*1024*1024)throw new Error('35MB以下の写真を選択してください。');
+        if(!(file.type||'').startsWith('image/') && !/\.(heic|heif|jpeg|jpg|png|webp|gif|bmp)$/i.test(file.name||'')) {
+          throw new Error('画像ファイルを選択してください。');
+        }
+        const src=URL.createObjectURL(file);
+        let image;
+        try {
+          image=await new Promise((resolve,reject)=>{
+            const img=new Image();
+            img.onload=()=>resolve(img);
+            img.onerror=()=>reject(new Error('画像を読み込めませんでした。別の写真をお試しください。'));
+            img.src=src;
+          });
+        }finally{
+          URL.revokeObjectURL(src);
+        }
+        if(job!==cropSelectionJob)return;
+        if(!image.naturalWidth || !image.naturalHeight)throw new Error('画像のサイズを取得できません。');
+        crop={
+          image,width:image.naturalWidth,height:image.naturalHeight,
+          zoom:1,offsetX:0,offsetY:0
+        };
+        cropPointers.clear();
+        cropPinch=null;
+        renderCrop();
+        el('photoCropDialog').showModal();
+      }catch(error){
+        if(job!==cropSelectionJob)return;
+        toast(error.message||'写真を読み込めませんでした。');
+        console.warn(error);
+        photoBusy=false;
+        el('saveRecord').disabled=false;
+        updatePhotoEditor();
+      }finally{
+        event.target.value='';
+      }
+    }
+    function clearPhoto() {
+      ++photoJob;
+      if(el('photoCropDialog').open)el('photoCropDialog').close();
+      photoDraft=null;
+      photoBusy=false;
+      el('saveRecord').disabled=false;
+      el('photoInput').value='';
+      updatePhotoEditor();
+    }
     function openEditor(record = null) {
       editingId = record?.id || null;
       el('editorTitle').textContent = record ? '個体を編集' : '個体を登録';
@@ -1163,11 +1784,21 @@
       el('recordForm').reset();
       el('speciesInput').value = record?.species || '';
       el('nameInput').value = record?.name || '';
-      el('sizeInput').value = record?.size ?? '';
+      el('sizeInput').value = record?.size == null ? '' : Number(record.size).toFixed(1);
       el('weightInput').value = record?.weight == null ? '' : weightText(record.weight);
       el('statusInput').value = record?.status || '現役';
       el('notesInput').value = record?.notes || '';
       el('notes2Input').value = record?.notes2 || '';
+      ++photoJob;
+      cropSelectionJob++;
+      crop = null;
+      cropPointers.clear();
+      cropPinch = null;
+      photoBusy = false;
+      photoDraft = validPhotoData(record?.photo);
+      el('photoInput').value = '';
+      el('saveRecord').disabled = false;
+      updatePhotoEditor();
       editorRatings(record?.ratings || [5,5,5]);
       el('strengthInput').value = record?.strength ?? 5;
       el('strengthValue').innerHTML = `${el('strengthInput').value} <small>/ 10</small>`;
@@ -1177,11 +1808,12 @@
     function closeDialog(id) { el(id).close(); }
     function saveRecord(event) {
       event.preventDefault();
+      if (photoBusy) { toast('写真の圧縮が終わってから保存してください。'); return; }
       const species = el('speciesInput').value.trim();
       if (!species) { el('speciesInput').focus(); toast('種類を入力してください。'); return; }
       const rawSize = el('sizeInput').value.trim();
-      const size = rawSize ? Number(rawSize) : null;
-      if (size !== null && (!Number.isFinite(size) || size < 0.1 || size > 999.9)) { el('sizeInput').focus(); toast('サイズを正しく入力してください。'); return; }
+      const size = rawSize ? Math.round(Number(rawSize) * 10) / 10 : null;
+      if (size !== null && (!/^\d+(?:\.\d)?$/.test(rawSize) || !Number.isFinite(size) || size < 0.1 || size > 999.9)) { el('sizeInput').focus(); toast('サイズは小数点以下1桁（0.1mm単位）で入力してください。'); return; }
       const rawWeight = el('weightInput').value.trim();
       const weight = rawWeight ? Number(rawWeight) : null;
       if (weight !== null && (!/^\d+(?:\.\d{1,2})?$/.test(rawWeight) || !Number.isFinite(weight) || weight > 999.99)) {
@@ -1191,13 +1823,20 @@
       const now = Date.now();
       const rec = {
         id: previous?.id || newId(), species, name: el('nameInput').value.trim(), size, weight,
-        notes: el('notesInput').value.trim(), notes2: el('notes2Input').value.trim(), status: el('statusInput').value, ratings: EMOJIS.map((_,i)=>Number(el('ratingInput'+i).value)),
+        notes: el('notesInput').value.trim(), notes2: el('notes2Input').value.trim(), photo: photoDraft, status: el('statusInput').value, ratings: EMOJIS.map((_,i)=>Number(el('ratingInput'+i).value)),
         strength: Number(el('strengthInput').value),
         createdAt: previous?.createdAt || now, updatedAt: now, demo: false
       };
+      const originalRecords = app.records;
       if (previous) app.records = app.records.map(r=>r.id === previous.id ? rec : r);
-      else app.records.push(rec);
-      const saved=save(); closeDialog('editor'); render(); toast(saved ? (previous ? '個体情報を更新しました。' : '個体を登録しました。') : '自動保存できません。下の「バックアップ」を押してデータを保存してください。');
+      else app.records = [...app.records,rec];
+      if (!save()) {
+        app.records = originalRecords;
+        toast('保存できません。端末の保存容量を確認するか、写真を減らしてください。');
+        return;
+      }
+      closeDialog('editor');render();
+      toast(previous ? '個体情報を更新しました。' : '個体を登録しました。');
     }
     function downloadFile(name, content, mime) {
       const url = URL.createObjectURL(new Blob([content], {type: mime}));
@@ -1206,12 +1845,13 @@
     }
     function dateCode() { return new Date().toLocaleDateString('sv-SE'); }
     function exportBackup() {
-      downloadFile('kuwagata-backup-' + dateCode() + '.json', JSON.stringify({...app, exportedAt:new Date().toISOString()},null,2), 'application/json;charset=utf-8');
+      const trainerFileName = String(app.trainerName || 'トレーナー未登録').trim().replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').replace(/[.\s]+$/g, '') || 'トレーナー未登録';
+      downloadFile(trainerFileName + '_' + dateCode() + '_個体情報.json', JSON.stringify({...app, exportedAt:new Date().toISOString()},null,2), 'application/json;charset=utf-8');
       toast('バックアップファイルを書き出しました。');
     }
     function exportCsv() {
       const csvCell = v => '"' + String(v ?? '').replaceAll('"','""') + '"';
-      const rows = [['トレーナー名','種類','名前','サイズ(mm)','体重(g)','状態','総合的な強さ','パワー','テクニック','メンタル','備考1','備考2','登録日'], ...app.records.map(r=>[app.trainerName || '',r.species,r.name,r.size??'',r.weight === null ? '' : weightText(r.weight),r.status || '現役',r.strength ?? '',...r.ratings,r.notes,r.notes2 || '',new Date(r.createdAt).toLocaleDateString('ja-JP')])];
+      const rows = [['トレーナー名','種類','名前','サイズ(mm)','体重(g)','状態','総合的な強さ','パワー','テクニック','メンタル','備考1','備考2','登録日'], ...app.records.map(r=>[app.trainerName || '',r.species,r.name,r.size === null ? '' : numberText(r.size),r.weight === null ? '' : weightText(r.weight),r.status || '現役',r.strength ?? '',...r.ratings,r.notes,r.notes2 || '',new Date(r.createdAt).toLocaleDateString('ja-JP')])];
       downloadFile('kuwagata-list-' + dateCode() + '.csv', '\uFEFF' + rows.map(row=>row.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
       toast('CSVファイルを書き出しました。');
     }
@@ -1230,151 +1870,194 @@
 
     // Local-only canvas export: all registered individuals, independent of active filters.
     // Pages are capped in height for reasonable browser memory use.
-    const IMAGE_WIDTH = 1080;
-    const IMAGE_TOP = 254;
-    const IMAGE_MAX_HEIGHT = 3800;
-    const IMAGE_GAP = 19;
-    const IMAGE_BOTTOM = 100;
-    const IMAGE_FONT = '"Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif';
-    let imagePages = [];
-    let imagePageIndex = 0;
-    function imgFont(size, weight = 600) { return `${weight} ${size}px ${IMAGE_FONT}`; }
-    function rounded(ctx,x,y,w,h,r) {
+
+    const IMAGE_WIDTH=1080;
+    const IMAGE_HEIGHT=1370;
+    const IMAGE_FONT='"Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif';
+    let selectedImageRecordId=null;
+    let imageBuildToken=0;
+    function imgFont(size,weight=600){return `${weight} ${size}px ${IMAGE_FONT}`;}
+    function rounded(ctx,x,y,w,h,r){
       const q=Math.min(r,w/2,h/2);
-      ctx.beginPath(); ctx.moveTo(x+q,y); ctx.arcTo(x+w,y,x+w,y+h,q); ctx.arcTo(x+w,y+h,x,y+h,q); ctx.arcTo(x,y+h,x,y,q); ctx.arcTo(x,y,x+w,y,q); ctx.closePath();
+      ctx.beginPath();
+      ctx.moveTo(x+q,y);
+      ctx.arcTo(x+w,y,x+w,y+h,q);
+      ctx.arcTo(x+w,y+h,x,y+h,q);
+      ctx.arcTo(x,y+h,x,y,q);
+      ctx.arcTo(x,y,x+w,y,q);
+      ctx.closePath();
     }
-    function wrapped(ctx, text, limit, font) {
+    function wrapForShare(ctx,value,maxWidth,maxLines,font){
       ctx.font=font;
+      const content=String(value??'').replace(/\r\n?/g,'\n');
+      if(!content.trim())return [];
       const lines=[];
-      const input=String(text ?? '—').replace(/\r\n?/g,'\n').split('\n');
-      for (const paragraph of input) {
-        if (!paragraph) { lines.push(''); continue; }
+      for(const paragraph of content.split('\n')){
+        if(paragraph===''){lines.push('');continue;}
         let line='';
-        for(const char of Array.from(paragraph)) {
-          if (line && ctx.measureText(line+char).width > limit) { lines.push(line); line=char; }
-          else line+=char;
+        for(const ch of Array.from(paragraph)){
+          if(line && ctx.measureText(line+ch).width>maxWidth){lines.push(line);line=ch;}
+          else line+=ch;
         }
         lines.push(line);
       }
-      return lines.length ? lines : ['—'];
-    }
-    function sortedImageRecords() {
-      return [...app.records].sort((a,b)=>(b.strength??-1)-(a.strength??-1) || b.ratings.reduce((sum,n)=>sum+n,0)-a.ratings.reduce((sum,n)=>sum+n,0) || (b.size??-1)-(a.size??-1) || b.createdAt-a.createdAt);
-    }
-    function recordImageLayout(ctx, rec) {
-      const species=wrapped(ctx,'種類：'+rec.species,892,imgFont(26,600));
-      const name=wrapped(ctx,'名前：'+(rec.name||'未設定'),892,imgFont(35,800));
-      const notes=wrapped(ctx,rec.notes.trim()||'—',912,imgFont(23,500));
-      const specAt=100;
-      const nameAt=specAt+species.length*38+17;
-      const sizeAt=nameAt+name.length*48+11;
-      const statusAt=sizeAt+49;
-      const paramsAt=statusAt+54;
-      const notesTitleAt=paramsAt+107;
-      const notesAt=notesTitleAt+39;
-      const height=notesAt+notes.length*35+31;
-      return {rec,species,name,notes,specAt,nameAt,sizeAt,statusAt,paramsAt,notesTitleAt,notesAt,height};
-    }
-    const IMAGE_RECORDS_PER_PAGE = 5;
-    function prepareImagePages() {
-      const ctx=document.createElement('canvas').getContext('2d');
-      const source=sortedImageRecords();
-      const layouts=source.map(rec=>recordImageLayout(ctx,rec));
-      const pages=[];
-      let current=[],height=IMAGE_TOP;
-      for(const r of layouts) {
-        const reachedPageLimit=current.length >= IMAGE_RECORDS_PER_PAGE;
-        const reachedHeightLimit=current.length && height+r.height+IMAGE_GAP+IMAGE_BOTTOM > IMAGE_MAX_HEIGHT;
-        if(reachedPageLimit || reachedHeightLimit) {
-          pages.push(current);current=[];height=IMAGE_TOP;
-        }
-        current.push(r); height+=r.height+IMAGE_GAP;
+      if(lines.length>maxLines){
+        let last=lines[maxLines-1];
+        while(last && ctx.measureText(last+'…').width>maxWidth)last=Array.from(last).slice(0,-1).join('');
+        lines[maxLines-1]=last+'…';
       }
-      if(current.length) pages.push(current);
-      return pages;
+      return lines.slice(0,maxLines);
     }
-    function drawImagePage(index) {
-      const records=imagePages[index];
-      const totalH=IMAGE_TOP+records.reduce((sum,l)=>sum+l.height+IMAGE_GAP,0)+IMAGE_BOTTOM;
+    function shareNoteBox(ctx,x,y,w,h,value){
+      rounded(ctx,x,y,w,h,17);
+      ctx.fillStyle='#203328';ctx.fill();
+      ctx.strokeStyle='#46644e';ctx.lineWidth=2;ctx.stroke();
+      const rows=wrapForShare(ctx,value,w-44,5,imgFont(23,500));
+      ctx.fillStyle='#f0f4ed';
+      ctx.font=imgFont(23,500);
+      ctx.textAlign='left';
+      ctx.textBaseline='alphabetic';
+      rows.forEach((line,index)=>ctx.fillText(line,x+23,y+43+index*36,w-46));
+    }
+    function shareParameter(ctx,x,y,w,h,emoji,label,value,color){
+      rounded(ctx,x,y,w,h,16);
+      ctx.fillStyle='#223229';ctx.fill();
+      ctx.strokeStyle=color;ctx.lineWidth=2;ctx.globalAlpha=.68;ctx.stroke();ctx.globalAlpha=1;
+      ctx.fillStyle='#eff5e8';ctx.font=imgFont(26,700);
+      ctx.textAlign='left';ctx.fillText(emoji+' '+label,x+21,y+43,w-128);
+      ctx.textAlign='right';ctx.fillStyle=color;ctx.font=imgFont(31,800);
+      ctx.fillText(value===null?'—':String(value)+'/10',x+w-20,y+44,125);
+      const gap=8,segW=(w-42-gap*9)/10;
+      for(let n=0;n<10;n++){
+        rounded(ctx,x+21+n*(segW+gap),y+h-47,segW,17,4);
+        ctx.fillStyle=n<(value??0)?color:'#34493b';ctx.fill();
+      }
+      ctx.textAlign='left';
+    }
+    function drawSquarePhoto(ctx,x,y,size,image){
+      rounded(ctx,x,y,size,size,18);
+      ctx.fillStyle='#112018';ctx.fill();
+      ctx.save();
+      rounded(ctx,x,y,size,size,18);
+      ctx.clip();
+      if(image&&image.naturalWidth&&image.naturalHeight){
+        const m=Math.min(image.naturalWidth,image.naturalHeight);
+        const sx=(image.naturalWidth-m)/2,sy=(image.naturalHeight-m)/2;
+        ctx.drawImage(image,sx,sy,m,m,x,y,size,size);
+      }else{
+        ctx.fillStyle='#1b2b21';ctx.fillRect(x,y,size,size);
+        ctx.textAlign='center';ctx.font=imgFont(28,600);ctx.fillStyle='#91a99a';
+        ctx.fillText('写真未登録',x+size/2,y+size/2);
+      }
+      ctx.restore();
+      rounded(ctx,x,y,size,size,18);ctx.strokeStyle='#557a5d';ctx.lineWidth=3;ctx.stroke();
+      ctx.textAlign='left';
+    }
+    function drawIndividualImage(record,photo){
       const canvas=document.createElement('canvas');
-      canvas.width=IMAGE_WIDTH;canvas.height=Math.ceil(totalH);
+      canvas.width=IMAGE_WIDTH;canvas.height=IMAGE_HEIGHT;
       const ctx=canvas.getContext('2d');
-      if(!ctx) throw Error('画像を作成できないブラウザです');
-      ctx.fillStyle='#0d1611';ctx.fillRect(0,0,IMAGE_WIDTH,totalH);
-      const glow=ctx.createLinearGradient(0,0,IMAGE_WIDTH,225);
-      glow.addColorStop(0,'#213923');glow.addColorStop(1,'#102019');
-      ctx.fillStyle=glow;ctx.fillRect(0,0,IMAGE_WIDTH,IMAGE_TOP-20);
-      ctx.fillStyle='#b4e778';ctx.fillRect(48,43,8,111);
-      ctx.fillStyle='#f0f7ee';ctx.font=imgFont(50,800);ctx.textBaseline='alphabetic';ctx.textAlign='left';
-      ctx.fillText('カブクワデータベース',78,97);
-      ctx.fillStyle='#b9d19e';ctx.font=imgFont(23,600);ctx.fillText('全個体一覧  /  総合的な強さ順',80,140);
-      ctx.font=imgFont(22,700);ctx.fillStyle='#d1edbc';
-      ctx.fillText(`トレーナー：${app.trainerName || '未登録'}`,80,178,IMAGE_WIDTH-160);
-      ctx.font=imgFont(21,500);ctx.fillStyle='#b2c0b3';
-      ctx.fillText(`登録 ${app.records.length}匹    |    ${new Date().toLocaleDateString('ja-JP')}    |    ${index+1} / ${imagePages.length}ページ`,80,210);
-      let y=IMAGE_TOP;
-      for(const l of records) {
-        const x=48,w=984,r=l.rec;
-        rounded(ctx,x,y,w,l.height,18);ctx.fillStyle='#18271f';ctx.fill();ctx.strokeStyle='#38503c';ctx.lineWidth=2;ctx.stroke();
-        ctx.textAlign='left';ctx.font=imgFont(24,750);ctx.fillStyle='#bce9a4';
-        ctx.textAlign='right';ctx.font=imgFont(31,800);ctx.fillStyle='#ffdf9a';
-        ctx.fillText(`総合的な強さ   ${r.strength??'—'} / 10`,x+w-30,y+45);
-        ctx.textAlign='left';ctx.fillStyle='#f0f2ef';ctx.font=imgFont(26,600);
-        l.species.forEach((line,i)=>ctx.fillText(line,x+30,y+l.specAt+i*38));
-        ctx.fillStyle='#f2f6ef';ctx.font=imgFont(35,800);
-        l.name.forEach((line,i)=>ctx.fillText(line,x+30,y+l.nameAt+i*48));
-        ctx.fillStyle='#e1e9dc';ctx.font=imgFont(27,600);
-        ctx.fillText(`サイズ：${numberText(r.size)}${r.size === null ? '' : ' mm'}`,x+30,y+l.sizeAt);
-        ctx.fillStyle='#d5edbd';
-        ctx.fillText(`体重：${weightText(r.weight)}${r.weight === null ? '' : 'g'}`,x+515,y+l.sizeAt);
-        ctx.font=imgFont(23,800);
-        ctx.fillStyle=r.status==='旅立ち'?'#c7c1ea':r.status==='引退'?'#e8d0a1':r.status==='休養中'?'#b9d9f5':'#bce99a';
-        ctx.fillText(`状態：${r.status || '現役'}`,x+30,y+l.statusAt);
-        const items=[['💪🏻 パワー',r.ratings[0],'#b4e778'],['🏓 テクニック',r.ratings[1],'#edbe7a'],['🫀 メンタル',r.ratings[2],'#eb958b']];
-        const step=306;
-        items.forEach((item,i)=>{
-          const sx=x+30+i*step;
-          ctx.textAlign='left';ctx.font=imgFont(21,600);ctx.fillStyle='#d6e6d4';
-          ctx.fillText(item[0],sx,y+l.paramsAt);
-          ctx.textAlign='right';ctx.font=imgFont(24,800);ctx.fillStyle='#f0f4ed';ctx.fillText(String(item[1]),sx+265,y+l.paramsAt);
-          for(let j=0;j<10;j++) {
-            rounded(ctx,sx+j*26.5,y+l.paramsAt+20,21,10,3);
-            ctx.fillStyle=j<item[1]?item[2]:'#34493b';ctx.fill();
-          }
-        });
-        ctx.textAlign='left';ctx.fillStyle='#a8c29e';ctx.font=imgFont(22,700);
-        ctx.fillText('備考',x+30,y+l.notesTitleAt);
-        ctx.fillStyle='#e4ebe0';ctx.font=imgFont(23,500);
-        l.notes.forEach((line,i)=>ctx.fillText(line,x+30,y+l.notesAt+i*35));
-        y+=l.height+IMAGE_GAP;
-      }
-      ctx.textAlign='center';ctx.font=imgFont(20,500);ctx.fillStyle='#91aa96';
-      ctx.fillText('KABUKUWA DATABASE   •   個体情報共有用画像',IMAGE_WIDTH/2,totalH-41);
+      if(!ctx)throw new Error('画像を作成できないブラウザです。');
+      ctx.fillStyle='#0d1611';ctx.fillRect(0,0,IMAGE_WIDTH,IMAGE_HEIGHT);
+      const header=ctx.createLinearGradient(0,0,IMAGE_WIDTH,210);
+      header.addColorStop(0,'#213923');header.addColorStop(1,'#102019');
+      ctx.fillStyle=header;ctx.fillRect(0,0,IMAGE_WIDTH,191);
+      ctx.fillStyle='#b4e778';ctx.fillRect(50,42,8,106);
+      ctx.textAlign='left';ctx.textBaseline='alphabetic';
+      ctx.fillStyle='#f0f7ee';ctx.font=imgFont(48,800);
+      ctx.fillText('カブクワデータベース',82,95,930);
+      ctx.fillStyle='#b9d19e';ctx.font=imgFont(22,700);
+      ctx.fillText('KABUKUWA DATABASE  /  個体情報',84,137,900);
+      ctx.fillStyle='#cad9c8';ctx.font=imgFont(22,600);
+      ctx.fillText('トレーナー：'+(app.trainerName||'未登録'),84,175,850);
+
+      const bx=49,by=218,bw=982,bh=1076;
+      rounded(ctx,bx,by,bw,bh,24);
+      ctx.fillStyle='#18271f';ctx.fill();
+      ctx.strokeStyle='#3d5544';ctx.lineWidth=2;ctx.stroke();
+
+      // Upper half: same identity placement as the live card, with a square portrait at right.
+      ctx.fillStyle='#9eb7a2';ctx.font=imgFont(22,700);
+      ctx.fillText('個体名',91,277);
+      ctx.fillStyle='#f3f7f1';ctx.font=imgFont(53,850);
+      ctx.fillText(record.name||'名前未設定',90,334,525);
+      ctx.fillStyle='#f0f4ed';ctx.font=imgFont(27,700);
+      ctx.fillText(record.species,91,407,535);
+      ctx.font=imgFont(25,800);
+      ctx.fillStyle=record.status==='旅立ち'?'#c7c1ea':record.status==='引退'?'#e8d0a1':record.status==='休養中'?'#b9d9f5':'#bce99a';
+      ctx.fillText('状態：'+(record.status||'現役'),91,474,520);
+
+      ctx.font=imgFont(24,600);ctx.fillStyle='#adbfae';
+      ctx.fillText('サイズ',91,526);
+      ctx.fillText('体重',365,526);
+      ctx.fillStyle='#f4f5f1';ctx.font=imgFont(48,800);
+      ctx.fillText(numberText(record.size)+(record.size===null?'':' mm'),90,583,258);
+      ctx.fillStyle='#d5edbd';
+      ctx.fillText(weightText(record.weight)+(record.weight===null?'':' g'),363,583,255);
+
+      drawSquarePhoto(ctx,667,260,321,photo);
+
+      ctx.strokeStyle='#3d5745';ctx.lineWidth=2;ctx.beginPath();
+      ctx.moveTo(87,623);ctx.lineTo(992,623);ctx.stroke();
+      // Four parameters, in the same order as the record's 2x2 grid.
+      shareParameter(ctx,87,655,440,132,'★','総合的な強さ',record.strength,'#f3cf82');
+      shareParameter(ctx,553,655,440,132,'💪🏻','パワー',record.ratings[0],'#b4e778');
+      shareParameter(ctx,87,810,440,132,'🏓','テクニック',record.ratings[1],'#edbe7a');
+      shareParameter(ctx,553,810,440,132,'🫀','メンタル',record.ratings[2],'#eb958b');
+      // Bottom notes are unlabeled: only the frame and content.
+      shareNoteBox(ctx,87,975,440,245,record.notes);
+      shareNoteBox(ctx,553,975,440,245,record.notes2);
+
+      ctx.textAlign='center';ctx.fillStyle='#97ae9e';ctx.font=imgFont(20,500);
+      ctx.fillText('KABUKUWA DATABASE   •   '+new Date().toLocaleDateString('ja-JP'),IMAGE_WIDTH/2,1341);
       return canvas.toDataURL('image/png');
     }
-    function updateImagePage() {
-      const img=el('imagePreview');
-      img.removeAttribute('src');
-      img.src=drawImagePage(imagePageIndex);
-      el('imagePageNumber').textContent=`${imagePageIndex+1} / ${imagePages.length} 枚`;
-      el('imagePrev').disabled=imagePageIndex===0;
-      el('imageNext').disabled=imagePageIndex===imagePages.length-1;
-      el('imageInstructions').textContent=`${app.records.length}匹の全情報を強さ順にまとめました。1ページ最大${IMAGE_RECORDS_PER_PAGE}匹で、${imagePages.length>1?'複数枚に分かれるため、各ページを保存してください。':'1枚の画像として保存できます。'} スマホでは画像を長押しして保存することもできます。`;
+    function loadSharePhoto(data){
+      return new Promise(resolve=>{
+        if(!data){resolve(null);return;}
+        const image=new Image();
+        image.onload=()=>resolve(image);
+        image.onerror=()=>resolve(null);
+        image.src=data;
+      });
     }
-    function openImageExport() {
-      if(!app.records.length){toast('まず個体を登録してください。');return;}
+    async function openImageExport(record){
+      if(!record)return;
+      selectedImageRecordId=record.id;
+      const serial=++imageBuildToken;
+      const preview=el('imagePreview');
+      preview.classList.add('hidden');
+      preview.removeAttribute('src');
+      el('imageDialogTitle').textContent=(record.name||record.species)+' の個体画像';
+      el('imageInstructions').textContent='選んだ個体の画像を作成しています…';
+      el('imageDownload').disabled=true;
+      if(!el('imageDialog').open)el('imageDialog').showModal();
       try{
-        imagePages=prepareImagePages();imagePageIndex=0;
-        updateImagePage();el('imageDialog').showModal();
-      } catch(e){console.warn('画像の生成に失敗しました',e);toast('画像を作れませんでした。ブラウザを変えてお試しください。');}
+        const photo=await loadSharePhoto(record.photo);
+        if(serial!==imageBuildToken||!el('imageDialog').open)return;
+        const imageData=drawIndividualImage(record,photo);
+        if(serial!==imageBuildToken)return;
+        preview.src=imageData;
+        preview.classList.remove('hidden');
+        el('imageDownload').disabled=false;
+        el('imageInstructions').textContent='「'+(record.name||record.species)+'」1体の共有用画像です。iPhoneでは画像を長押しして保存することもできます。';
+      }catch(error){
+        console.warn('個体画像を作成できませんでした',error);
+        el('imageInstructions').textContent='画像を作成できませんでした。別のブラウザでお試しください。';
+        toast('個体画像を作れませんでした。');
+      }
     }
-    function saveImagePage() {
+    function saveImagePage(){
       const img=el('imagePreview');
-      if(!img.src)return;
-      const a=document.createElement('a');a.href=img.src;
-      a.download=`kabukuwa-全個体一覧-${dateCode()}-${imagePageIndex+1}.png`;
+      if(!selectedImageRecordId||!img.src||el('imageDownload').disabled)return;
+      const record=app.records.find(r=>r.id===selectedImageRecordId);
+      const name=String(record?.name||record?.species||'個体').trim()
+        .replace(/[\\/:*?"<>|\x00-\x1f]/g,'_').replace(/[.\s]+$/g,'').slice(0,60)||'個体';
+      const a=document.createElement('a');
+      a.href=img.src;
+      a.download='kabukuwa_'+name+'_'+dateCode()+'.png';
       document.body.append(a);a.click();a.remove();
-      toast('保存が始まらない場合は画像を長押しして保存してください。');
+      toast('画像を保存できない場合は、プレビューを長押しして保存してください。');
     }
 
     function addDemo() {
@@ -1391,6 +2074,18 @@
     el('newEmpty').addEventListener('click',()=>openEditor());
     el('demoButton').addEventListener('click',addDemo);
     el('recordForm').addEventListener('submit',saveRecord);
+    el('photoInput').addEventListener('change',choosePhoto);
+    el('photoRemove').addEventListener('click',clearPhoto);
+    el('photoCropCanvas').addEventListener('pointerdown',cropPointerDown);
+    el('photoCropCanvas').addEventListener('pointermove',cropMove);
+    el('photoCropCanvas').addEventListener('pointerup',cropPointerEnd);
+    el('photoCropCanvas').addEventListener('pointercancel',cropPointerEnd);
+    el('photoCropCanvas').addEventListener('wheel',cropZoomFromWheel,{passive:false});
+    el('photoCropZoom').addEventListener('input',cropZoomFromSlider);
+    el('photoCropCancel').addEventListener('click',cancelCrop);
+    el('photoCropClose').addEventListener('click',cancelCrop);
+    el('photoCropApply').addEventListener('click',applyCrop);
+    el('photoCropDialog').addEventListener('close',discardCrop);
     el('strengthInput').addEventListener('input', event => { el('strengthValue').innerHTML = `${event.target.value} <small>/ 10</small>`; });
     el('search').addEventListener('input',render);
     el('sort').addEventListener('change',render);
@@ -1400,7 +2095,178 @@
     document.querySelectorAll('dialog').forEach(dialog=>dialog.addEventListener('click',event=>{ if(event.target===dialog) dialog.close(); }));
     el('viewFull').addEventListener('click', () => setViewMode('full'));
     el('viewCompact').addEventListener('click', () => setViewMode('compact'));
+
+    // 通常表示とコンパクト表示の個体カード全体を、写真画面へ重ねて切替。
+    let lastPhotoSwipeAt = 0;
+    function recordFromCard(card) {
+      if (!card) return null;
+      const id = card.dataset.compactId || card.querySelector('button[data-action]')?.dataset.id;
+      return app.records.find(rec => rec.id === id) || null;
+    }
+    function showPhotoSide(card) {
+      if (!card || card.querySelector('.card-photo-overlay')) return false;
+      const record = recordFromCard(card);
+      if (!record) return false;
+      const overlay = document.createElement('div');
+      overlay.className = 'card-photo-overlay';
+      const body = document.createElement('div');
+      body.className = 'card-photo-content';
+      if (card.classList.contains('mini-card')) {
+        body.classList.add('compact-photo-content');
+        body.setAttribute('aria-label', (record.name || record.species) + 'の能力値と写真');
+        const stats = document.createElement('div');
+        stats.className = 'compact-photo-stats';
+        stats.setAttribute('role', 'group');
+        stats.setAttribute('aria-label', '総合的な強さ・パワー・テクニック・メンタル');
+        const attributes = [
+          ['★', '総合的な強さ', record.strength, 'strength'],
+          ['💪🏻', 'パワー', record.ratings[0], 'power'],
+          ['🏓', 'テクニック', record.ratings[1], 'skill'],
+          ['🫀', 'メンタル', record.ratings[2], 'heart']
+        ];
+        attributes.forEach(([symbol,label,value,color]) => {
+          const item = document.createElement('div');
+          item.className = 'compact-photo-stat ' + color;
+          const header = document.createElement('div');
+          header.className = 'compact-photo-stat-head';
+          const title = document.createElement('span');
+          title.className = 'compact-photo-stat-label';
+          title.textContent = symbol + ' ' + label;
+          const score = document.createElement('strong');
+          score.className = 'compact-photo-stat-value';
+          score.textContent = value === null ? '—' : value + '/10';
+          header.append(title,score);
+          const gauge = document.createElement('div');
+          gauge.className = 'bar';
+          gauge.setAttribute('aria-hidden', 'true');
+          for(let n=0;n<10;n++){
+            const segment = document.createElement('span');
+            segment.className = 'segment' + (n < (value ?? 0) ? ' active ' + color : '');
+            gauge.appendChild(segment);
+          }
+          item.append(header,gauge);
+          stats.appendChild(item);
+        });
+        const photoSquare = document.createElement('div');
+        photoSquare.className = 'compact-photo-square';
+        if(record.photo) {
+          const photo = document.createElement('img');
+          photo.className = 'compact-photo-image';
+          photo.alt = (record.name || record.species) + 'の登録写真';
+          photo.src = record.photo;
+          photo.draggable = false;
+          photoSquare.appendChild(photo);
+        } else {
+          photoSquare.classList.add('is-empty');
+          const placeholder = document.createElement('span');
+          placeholder.className = 'compact-photo-placeholder';
+          placeholder.textContent = '未登録';
+          photoSquare.setAttribute('aria-label','写真未登録');
+          photoSquare.appendChild(placeholder);
+        }
+        body.append(stats,photoSquare);
+      } else if (record.photo) {
+        const photo = document.createElement('img');
+        photo.className = 'card-photo-image';
+        photo.alt = (record.name || record.species) + 'の写真';
+        photo.src = record.photo;
+        photo.draggable = false;
+        body.appendChild(photo);
+      } else {
+        const empty = document.createElement('div');
+        empty.className = 'card-photo-empty';
+        const title = document.createElement('strong');
+        title.textContent = '写真はまだ登録されていません';
+        const detail = document.createElement('span');
+        detail.textContent = '個体の編集画面から写真を1枚選択できます。';
+        empty.append(title,detail);
+        body.appendChild(empty);
+      }
+      const controls = document.createElement('div');
+      controls.className = 'card-photo-controls';
+      const back = document.createElement('button');
+      back.className = 'btn small';
+      back.type = 'button';
+      back.dataset.photoBack = '1';
+      back.textContent = '→ 個体情報に戻る';
+      const edit = document.createElement('button');
+      edit.className = 'btn small';
+      edit.type = 'button';
+      edit.dataset.photoEdit = '1';
+      edit.textContent = record.photo ? '✎ 写真を変更' : '＋ 写真を登録';
+      controls.append(back,edit);
+      overlay.append(body,controls);
+      card.appendChild(overlay);
+      if(card.classList.contains('mini-card'))card.classList.add('compact-photo-open');
+      return true;
+    }
+    function hidePhotoSide(card) {
+      if (!card) return false;
+      const overlay = card.querySelector('.card-photo-overlay');
+      if (!overlay) return false;
+      overlay.remove();
+      card.classList.remove('compact-photo-open');
+      return true;
+    }
+    let photoTouch = null;
+    el('cards').addEventListener('touchstart', event => {
+      if (event.touches.length !== 1) {photoTouch = null;return;}
+      const card = event.target.closest('.beetle-card');
+      if (!card) {photoTouch = null;return;}
+      const t = event.touches[0];
+      photoTouch = {card, identifier:t.identifier, x:t.clientX, y:t.clientY};
+    }, {passive:true});
+    el('cards').addEventListener('touchend', event => {
+      const gesture = photoTouch;
+      photoTouch = null;
+      if (!gesture) return;
+      const t = Array.from(event.changedTouches).find(f => f.identifier === gesture.identifier);
+      if (!t) return;
+      const dx = t.clientX - gesture.x;
+      const dy = t.clientY - gesture.y;
+      if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+      const changed = dx < 0 ? showPhotoSide(gesture.card) : hidePhotoSide(gesture.card);
+      if (changed) {
+        lastPhotoSwipeAt = Date.now();
+        event.preventDefault();
+      }
+    }, {passive:false});
+    el('cards').addEventListener('touchcancel', () => {photoTouch = null;}, {passive:true});
+    // マウスでの横ドラッグとキーボードの左右矢印にも対応。
+    let mouseSwipe = null;
+    el('cards').addEventListener('pointerdown', event => {
+      if (event.pointerType !== 'mouse' || event.button !== 0) return;
+      const card = event.target.closest('.beetle-card');
+      mouseSwipe = card ? {card,x:event.clientX,y:event.clientY} : null;
+    });
+    el('cards').addEventListener('pointerup', event => {
+      const g = mouseSwipe;
+      mouseSwipe = null;
+      if (!g || event.pointerType !== 'mouse') return;
+      const dx = event.clientX - g.x;
+      const dy = event.clientY - g.y;
+      if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.3) return;
+      const changed = dx < 0 ? showPhotoSide(g.card) : hidePhotoSide(g.card);
+      if (changed) lastPhotoSwipeAt = Date.now();
+    });
+    el('cards').addEventListener('pointercancel',()=>{mouseSwipe=null;});
     el('cards').addEventListener('click',event=>{
+      if (Date.now() - lastPhotoSwipeAt < 500) {event.preventDefault();return;}
+      const back = event.target.closest('[data-photo-back]');
+      if (back) {hidePhotoSide(back.closest('.beetle-card'));return;}
+      const edit = event.target.closest('[data-photo-edit]');
+      if (edit) {
+        const rec = recordFromCard(edit.closest('.beetle-card'));
+        if (rec) openEditor(rec);
+        return;
+      }
+      if (event.target.closest('.card-photo-overlay')) return;
+      const imageAction=event.target.closest('button[data-action="image"]');
+      if(imageAction){
+        const record=app.records.find(r=>r.id===imageAction.dataset.id);
+        if(record)openImageExport(record);
+        return;
+      }
       // 備考枠をスクロール・選択した際に、編集画面が誤って開かないようにする。
       if (event.target.closest('.card-note-panel, .mini-note')) return;
       const compactCard = event.target.closest('[data-compact-id]');
@@ -1417,7 +2283,15 @@
       }
     });
     el('cards').addEventListener('keydown', event => {
+      const photoKeyboardCard = event.target.closest('.beetle-card');
+      if (photoKeyboardCard && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
+        const changed = event.key === 'ArrowLeft' ? showPhotoSide(photoKeyboardCard) : hidePhotoSide(photoKeyboardCard);
+        if (changed) event.preventDefault();
+        return;
+      }
       if (event.key !== 'Enter' && event.key !== ' ') return;
+      if (event.target.closest('button, input, select, textarea, a')) return;
+      if (event.target.closest('.card-photo-overlay')) return;
       if (event.target.closest('.card-note-panel, .mini-note')) return;
       const card = event.target.closest('[data-compact-id]');
       if (!card) return;
@@ -1427,10 +2301,7 @@
     });
     el('exportJson').addEventListener('click',exportBackup);
     el('exportCsv').addEventListener('click',exportCsv);
-    el('exportImage').addEventListener('click',openImageExport);
     el('imageDownload').addEventListener('click',saveImagePage);
-    el('imagePrev').addEventListener('click',()=>{ if(imagePageIndex>0){imagePageIndex--;updateImagePage();} });
-    el('imageNext').addEventListener('click',()=>{ if(imagePageIndex<imagePages.length-1){imagePageIndex++;updateImagePage();} });
     el('importJson').addEventListener('click',()=>el('importFile').click());
     el('importFile').addEventListener('change',importBackup);
   })();
