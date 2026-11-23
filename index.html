@@ -1221,6 +1221,27 @@
     </form>
   </dialog>
 
+  <dialog class="dialog" id="restoreDialog" aria-labelledby="restoreTitle" aria-describedby="restoreDescription">
+    <div class="dialog-head">
+      <div><h2 class="dialog-title" id="restoreTitle">バックアップを復元</h2><p class="dialog-description" id="restoreDescription">個体数と写真数を確認してから復元します。</p></div>
+      <button type="button" class="close" data-close="restoreDialog" aria-label="閉じる">×</button>
+    </div>
+    <div class="dialog-body">
+      <p class="dialog-description" id="restoreFilename" style="overflow-wrap:anywhere"></p>
+      <div class="notice hidden" id="restoreSummary"></div>
+      <p class="notice hidden" id="restoreReplaceNote"></p>
+      <p class="dialog-description" id="restoreProgress" role="status" aria-live="polite"></p>
+      <div class="storage-warning hidden" id="restoreError" role="alert"></div>
+      <button type="button" class="btn small" id="chooseBackupFile" style="margin-top:16px">別のファイルを選ぶ</button>
+      <input type="file" id="restoreFile" accept=".json,application/json" class="hidden" />
+      <div class="dialog-actions" style="flex-wrap:wrap">
+        <button type="button" class="btn" data-close="restoreDialog">キャンセル</button>
+        <button type="button" class="btn primary" id="restoreConfirm" disabled>この内容で復元</button>
+      </div>
+    </div>
+  </dialog>
+
+
   <dialog class="dialog help-dialog" id="helpDialog" aria-labelledby="helpTitle">
     <div class="dialog-head"><div><h2 class="dialog-title" id="helpTitle">カブクワデータベースの使い方</h2><p class="dialog-description">登録からバックアップまで、順番に説明します。</p></div><button type="button" class="close" data-close="helpDialog" aria-label="閉じる">×</button></div>
     <div class="dialog-body guide-content">
@@ -1621,6 +1642,7 @@
       notice.textContent = storageErrorMessage || (storageLoading
         ? '個体情報と写真を読み込んでいます…'
         : '保存を完了できませんでした。バックアップを保存してください。');
+      if (el('restoreDialog').open) updateBackupRestoreDialog();
     }
     function canChangeData(restore = false) {
       if (storageBusy || storageLoading) {
@@ -1641,7 +1663,7 @@
         return error.message;
       }
       if (error?.name === 'SecurityError' || error?.name === 'NotAllowedError') {
-        return 'この開き方では保存が許可されていません。バックアップを保管し、Safariの通常モードで同じURLを開いてください。';
+        return 'この開き方ではデータを保存できません。HTMLビューアーを使っている場合は、アプリの公開URLをブラウザで直接開いてください。公開URLでも出る場合は、サイトの保存制限を確認してください。バックアップはそのまま保管してください。';
       }
       if (error?.name === 'VersionError') {
         return '保存先が新しい版へ更新されています。編集中の内容を控えてから、このページを再読み込みしてください。';
@@ -2361,23 +2383,138 @@
       downloadFile('kuwagata-list-' + dateCode() + '.csv', '\uFEFF' + rows.map(row=>row.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
       toast('CSVファイルを書き出しました。');
     }
+    // Reading a backup does not require permission to persist it. A separate,
+    // in-page confirmation commits it only when the storage layer is ready.
+    let pendingBackupRestore = null;
+    let backupReadJob = 0;
+    let backupReading = false;
+    let backupRestoring = false;
+    let backupReadError = '';
+
+    function updateBackupRestoreDialog() {
+      const data = pendingBackupRestore;
+      const unavailable = !storageReady && !storageCanRestore;
+      el('restoreSummary').classList.toggle('hidden', !data);
+      el('restoreSummary').textContent = data
+        ? `個体：${data.records.length}匹 ／ 写真：${data.records.filter(record => Boolean(record.photo)).length}枚`
+        : '';
+      el('restoreReplaceNote').classList.toggle('hidden', !data);
+      const currentLabel = hasReadableData ? `現在の${app.records.length}匹のデータ` : '保存先の現在のデータ';
+      el('restoreReplaceNote').textContent = data
+        ? `${currentLabel}を、このバックアップの内容に置き換えます。現在の内容も残したい場合は、キャンセルして先にバックアップを保存してください。`
+        : '';
+      el('restoreProgress').textContent = backupReading
+        ? 'バックアップを読み込んでいます…'
+        : backupRestoring
+          ? '個体情報と写真を保存しています…'
+          : data
+            ? 'バックアップを読み取れました。まだ復元は実行していません。'
+            : 'バックアップを選ぶと、ここで内容を確認できます。';
+      let message = backupReadError;
+      if (!message && data && unavailable) {
+        message = 'バックアップは読み取れましたが、保存先を使えないため復元できません。 ' +
+          (storageErrorMessage || 'アプリの公開URLをブラウザで直接開いてから、もう一度「復元」をお試しください。');
+      } else if (!message && data && hasStorageError) {
+        message = storageErrorMessage;
+      }
+      el('restoreError').textContent = message;
+      el('restoreError').classList.toggle('hidden', !message);
+      const busy = backupReading || backupRestoring || storageBusy || storageLoading;
+      el('restoreConfirm').disabled = !data || busy || unavailable;
+      el('restoreConfirm').style.opacity = el('restoreConfirm').disabled ? '.5' : '1';
+      el('chooseBackupFile').disabled = busy;
+    }
+
+    function openBackupPicker() {
+      if (storageLoading || storageBusy || backupReading || backupRestoring) {
+        toast('読み込み・保存が終わるまでお待ちください。');
+        return;
+      }
+      const input = el(el('restoreDialog').open ? 'restoreFile' : 'importFile');
+      input.value = '';
+      input.click();
+    }
+
+    function resetBackupRestore() {
+      // Invalidate a cancelled read so its eventual result cannot replace a
+      // newer selection or reopen a dialog the user has already dismissed.
+      ++backupReadJob;
+      pendingBackupRestore = null;
+      backupReading = false;
+      backupReadError = '';
+    }
+
+    async function readBackupText(file) {
+      if (typeof file.text === 'function') return await file.text();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result ?? ''));
+        reader.onerror = () => reject(reader.error || new Error('File read failed'));
+        reader.onabort = () => reject(new Error('File read cancelled'));
+        reader.readAsText(file, 'UTF-8');
+      });
+    }
+
     async function importBackup(event) {
-      const file = event.target.files?.[0];
+      const input = event.target;
+      const file = input.files?.[0];
       if (!file) return;
+      input.value = '';
+      if (storageLoading || storageBusy || backupReading || backupRestoring) {
+        toast('読み込み・保存が終わるまでお待ちください。');
+        return;
+      }
+      const job = ++backupReadJob;
+      pendingBackupRestore = null;
+      backupReadError = '';
+      backupReading = true;
+      el('restoreFilename').textContent = file.name || 'JSONバックアップ';
+      updateBackupRestoreDialog();
       try {
-        if (!canChangeData(true)) return;
-        const obj = JSON.parse(await file.text());
-        const newData = checkedIncomingData(obj);
-        if (!canChangeData(true)) return;
-        const currentLabel = hasReadableData ? `現在の${app.records.length}匹のデータ` : '保存先の現在のデータ';
-        if (!window.confirm(`バックアップの${newData.records.length}匹で、${currentLabel}を置き換えます。実行しますか？`)) return;
-        if (!await save(newData, true)) return;
-        render();
-        toast(newData.records.length + '匹の個体情報と写真を復元しました。');
+        if (!el('restoreDialog').open) el('restoreDialog').showModal();
+        let text;
+        try { text = await readBackupText(file); }
+        catch (_) {
+          throw Object.assign(new Error('ファイルを読み出せませんでした。「ファイル」アプリでバックアップを端末にダウンロードしてから、もう一度選んでください。現在のデータは変更していません。'), {name: 'BackupReadError'});
+        }
+        if (job !== backupReadJob) return;
+        let obj;
+        try { obj = JSON.parse(text.replace(/^\uFEFF/, '')); }
+        catch (_) {
+          throw Object.assign(new Error('JSONの形式を読み取れませんでした。アプリの「バックアップ」で書き出したJSONファイルを選んでください。現在のデータは変更していません。'), {name: 'BackupFormatError'});
+        }
+        pendingBackupRestore = checkedIncomingData(obj);
       } catch (error) {
-        toast(error?.name === 'DataError' ? error.message : '復元できませんでした。正しいJSONバックアップか確認してください。現在のデータは変更していません。');
-        console.warn('バックアップの復元に失敗しました', error);
-      } finally { event.target.value = ''; }
+        if (job !== backupReadJob) return;
+        backupReadError = ['BackupReadError', 'BackupFormatError', 'DataError'].includes(error?.name)
+          ? error.message
+          : 'バックアップの確認を完了できませんでした。アプリの公開URLをブラウザで直接開き、もう一度お試しください。現在のデータは変更していません。';
+        if (!el('restoreDialog').open) toast(backupReadError);
+        console.warn('バックアップの読み込み・確認に失敗しました', error?.name || 'Error');
+      } finally {
+        if (job === backupReadJob) {
+          backupReading = false;
+          updateBackupRestoreDialog();
+        }
+      }
+    }
+
+    async function confirmBackupRestore() {
+      if (!pendingBackupRestore || backupReading || backupRestoring || storageBusy || storageLoading) return;
+      if (!canChangeData(true)) { updateBackupRestoreDialog(); return; }
+      const next = pendingBackupRestore;
+      backupRestoring = true;
+      updateBackupRestoreDialog();
+      try {
+        if (!await save(next, true)) return;
+        pendingBackupRestore = null;
+        render();
+        closeDialog('restoreDialog');
+        toast(next.records.length + '匹の個体情報と写真' + next.records.filter(record => Boolean(record.photo)).length + '枚を復元しました。');
+      } finally {
+        backupRestoring = false;
+        updateBackupRestoreDialog();
+      }
     }
 
     // Local-only canvas export: all registered individuals, independent of active filters.
@@ -2820,8 +2957,12 @@
     el('exportJson').addEventListener('click',exportBackup);
     el('exportCsv').addEventListener('click',exportCsv);
     el('imageDownload').addEventListener('click',saveImagePage);
-    el('importJson').addEventListener('click',()=>{ if (canChangeData(true)) el('importFile').click(); });
+    el('importJson').addEventListener('click',openBackupPicker);
     el('importFile').addEventListener('change',importBackup);
+    el('restoreFile').addEventListener('change',importBackup);
+    el('chooseBackupFile').addEventListener('click',openBackupPicker);
+    el('restoreConfirm').addEventListener('click',confirmBackupRestore);
+    el('restoreDialog').addEventListener('close',resetBackupRestore);
     document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('cancel', event => {
       if (storageBusy) { event.preventDefault(); toast('保存が終わるまでお待ちください。'); }
     }));
