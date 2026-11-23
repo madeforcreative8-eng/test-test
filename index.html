@@ -1261,7 +1261,7 @@
       <p>※画像から個体データを復元することはできません。JSONバックアップは別途保存してください。</p>
 
       <h3>⑥ データをバックアップする【重要】</h3>
-      <p>登録した情報は、基本的に使用中のブラウザ内に保存されます。</p>
+      <p>登録した個体情報と写真は、使用中のブラウザ内に保存されます。初回は、同じブラウザ・同じサイトにある以前のデータを自動で引き継ぎます。</p>
       <p>ただし、別のスマホやブラウザには自動で引き継がれません。また、開き方によっては保存ができない場合があります。</p>
       <p>大切な個体データを守るため、<strong>定期的にバックアップを保存してください。</strong></p>
       <p><strong>バックアップの保存方法</strong></p>
@@ -1273,6 +1273,7 @@
       <h3>⑦ 安心して使うために</h3>
       <p>最初に1匹登録してからページを閉じ、再び開いたときにデータが残っているか確認してください。</p>
       <p>サイトの更新や端末の変更をする前にも、バックアップを保存しておくと安心です。</p>
+      <p>プライベートモードでは保存データが消える場合があります。今のデータをバックアップしてから、通常モードで同じサイトを開き「復元」してください。データが表示されない場合は、新しく登録する前にバックアップを復元してください。</p>
       <div class="guide-warning"><strong>個体情報は、ほかの端末と自動同期されません。</strong></div>
       <button type="button" class="btn primary" data-close="helpDialog" style="width:100%;margin-top:14px">確認しました・閉じる</button>
     </div>
@@ -1330,6 +1331,228 @@
   <script>
   (() => {
     'use strict';
+    /* IndexedDB storage: pictures stay as JPEG Blobs on disk and data URLs in the UI. */
+    function createKabukuwaStore(options = {}) {
+      const name = options.name || 'kabukuwa-database-indexeddb-v1';
+      const suppliedFactory = options.factory;
+      const photoLimit = 110000;
+      let database = null;
+      let opening = null;
+      let cachedRevision = null;
+      let cachedRecords = new Map();
+
+      function failure(name, message) {
+        const error = new Error(message);
+        error.name = name;
+        return error;
+      }
+      function isPhoto(value) {
+        return typeof value === 'string' && value.length <= photoLimit &&
+          /^data:image\/jpeg;base64,[a-zA-Z0-9+/]+={0,2}$/.test(value);
+      }
+      function snapshot(data) {
+        if (!data || !Array.isArray(data.records) || data.records.length > 5000 ||
+            typeof data.trainerName !== 'string') {
+          throw failure('DataError', '個体データの形式を確認してください。');
+        }
+        const ids = new Set();
+        const records = data.records.map(record => {
+          if (!record || typeof record.id !== 'string' || !record.id || ids.has(record.id) ||
+              typeof record.species !== 'string' || !record.species.trim() ||
+              !Array.isArray(record.ratings) || record.ratings.length !== 3) {
+            throw failure('DataError', '個体データの形式、または個体IDの重複を確認してください。');
+          }
+          if (record.photo != null && !isPhoto(record.photo)) {
+            throw failure('DataError', '読み込めない写真が含まれています。元のバックアップを保管してください。');
+          }
+          ids.add(record.id);
+          return {...record, photo: record.photo || null, ratings: [...record.ratings]};
+        });
+        return {version: 3, trainerName: data.trainerName, records};
+      }
+      function signature(record) {
+        return JSON.stringify({...record, photo: null});
+      }
+      function remember(data, revision) {
+        cachedRevision = revision;
+        cachedRecords = new Map(data.records.map(record =>
+          [record.id, {signature: signature(record), photo: record.photo}]));
+      }
+      function photoToBlob(value) {
+        if (!value) return null;
+        const binary = atob(value.slice(value.indexOf(',') + 1));
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return new Blob([bytes], {type: 'image/jpeg'});
+      }
+      async function photoFromBlob(blob) {
+        if (blob == null) return null;
+        if (!(blob instanceof Blob) || blob.type !== 'image/jpeg' || blob.size > photoLimit) {
+          throw failure('DataError', '保存した写真を読み込めません。バックアップを保管してください。');
+        }
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        let binary = '';
+        for (let i = 0; i < bytes.length; i += 8192) {
+          binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+        }
+        const value = 'data:image/jpeg;base64,' + btoa(binary);
+        if (!isPhoto(value)) throw failure('DataError', '保存した写真の形式を確認できません。');
+        return value;
+      }
+      function validMeta(meta) {
+        return meta && meta.id === 'state' && meta.schema === 1 && meta.initialized === true &&
+          Number.isSafeInteger(meta.revision) && meta.revision > 0 &&
+          typeof meta.trainerName === 'string' && Array.isArray(meta.recordIds) &&
+          meta.recordIds.length <= 5000 && meta.recordIds.every(id => typeof id === 'string' && id) &&
+          new Set(meta.recordIds).size === meta.recordIds.length;
+      }
+      function open() {
+        if (database) return Promise.resolve(database);
+        if (opening) return opening;
+        opening = new Promise((resolve, reject) => {
+          let factory;
+          try { factory = suppliedFactory === undefined ? globalThis.indexedDB : suppliedFactory; }
+          catch (error) { reject(error); return; }
+          if (!factory || typeof factory.open !== 'function') {
+            reject(failure('NotSupportedError', 'この開き方では端末内の保存領域を利用できません。'));
+            return;
+          }
+          let settled = false;
+          let request;
+          const timeout = setTimeout(() => {
+            if (settled) return;
+            settled = true;
+            reject(failure('TimeoutError', '保存領域を開けません。同じアプリの別のタブを閉じて再読み込みしてください。'));
+          }, options.openTimeout || 10000);
+          const fail = error => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+            reject(error);
+          };
+          try { request = factory.open(name, 1); }
+          catch (error) { fail(error); return; }
+          request.onupgradeneeded = () => {
+            if (settled) { request.transaction.abort(); return; }
+            const db = request.result;
+            if (!db.objectStoreNames.contains('records')) db.createObjectStore('records', {keyPath: 'id'});
+            if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', {keyPath: 'id'});
+          };
+          request.onblocked = () => { if (options.onBlocked) options.onBlocked(); };
+          request.onerror = () => fail(request.error || failure('UnknownError', '保存領域を開けません。'));
+          request.onsuccess = () => {
+            const db = request.result;
+            if (settled) { db.close(); return; }
+            settled = true;
+            clearTimeout(timeout);
+            database = db;
+            db.onversionchange = () => {
+              db.close();
+              if (database === db) database = null;
+              if (options.onVersionChange) options.onVersionChange();
+            };
+            db.onclose = () => {
+              if (database === db) database = null;
+            };
+            resolve(db);
+          };
+        });
+        opening = opening.finally(() => { opening = null; });
+        return opening;
+      }
+      async function load() {
+        const db = await open();
+        const raw = await new Promise((resolve, reject) => {
+          let tx;
+          try { tx = db.transaction(['records', 'meta'], 'readonly'); }
+          catch (error) { reject(error); return; }
+          let meta, rows;
+          tx.oncomplete = () => resolve({meta, rows});
+          tx.onabort = () => reject(tx.error || failure('AbortError', '保存データの読み込みが中断されました。'));
+          tx.onerror = () => { /* The transaction abort carries the actual error. */ };
+          tx.objectStore('meta').get('state').onsuccess = event => { meta = event.target.result; };
+          tx.objectStore('records').getAll().onsuccess = event => { rows = event.target.result; };
+        });
+        if (raw.meta === undefined) {
+          if (raw.rows.length) throw failure('DataError', '保存データの管理情報が見つかりません。上書きを停止しました。');
+          cachedRevision = null;
+          cachedRecords = new Map();
+          return {initialized: false, app: null, revision: null};
+        }
+        if (!validMeta(raw.meta) || raw.rows.length !== raw.meta.recordIds.length) {
+          throw failure('DataError', '保存データの件数・管理情報を確認できません。上書きを停止しました。');
+        }
+        const byId = new Map(raw.rows.map(record => [record.id, record]));
+        const records = [];
+        for (const id of raw.meta.recordIds) {
+          const stored = byId.get(id);
+          if (!stored) throw failure('DataError', '保存した個体データが見つかりません。上書きを停止しました。');
+          records.push({...stored, photo: await photoFromBlob(stored.photo)});
+        }
+        const data = snapshot({version: 3, trainerName: raw.meta.trainerName, records});
+        remember(data, raw.meta.revision);
+        return {initialized: true, app: data, revision: raw.meta.revision};
+      }
+      async function commit(data, expectedRevision) {
+        // Capture values and convert images before starting the transaction.
+        const next = snapshot(data);
+        if (expectedRevision !== null && (!Number.isSafeInteger(expectedRevision) || expectedRevision < 1)) {
+          throw failure('DataError', '保存データの版を確認できません。');
+        }
+        const db = await open();
+        const ids = new Set(next.records.map(record => record.id));
+        const changed = next.records.filter(record => {
+          const prior = cachedRevision === expectedRevision ? cachedRecords.get(record.id) : null;
+          return !prior || prior.signature !== signature(record) || prior.photo !== record.photo;
+        }).map(record => ({...record, photo: photoToBlob(record.photo)}));
+        const revision = (expectedRevision || 0) + 1;
+        await new Promise((resolve, reject) => {
+          let tx;
+          try { tx = db.transaction(['records', 'meta'], 'readwrite'); }
+          catch (error) { reject(error); return; }
+          let reason = null;
+          const abort = error => { reason = error; try { tx.abort(); } catch (_) { reject(error); } };
+          tx.oncomplete = () => resolve();
+          tx.onabort = () => reject(reason || tx.error || failure('AbortError', '保存が中断されました。もう一度お試しください。'));
+          tx.onerror = () => { /* Do not prevent the default transaction abort. */ };
+          const metaStore = tx.objectStore('meta');
+          const recordStore = tx.objectStore('records');
+          metaStore.get('state').onsuccess = event => {
+            try {
+              const current = event.target.result;
+              if (current !== undefined && !validMeta(current)) {
+                throw failure('DataError', '保存データの管理情報を確認できません。上書きを停止しました。');
+              }
+              if ((current ? current.revision : null) !== expectedRevision) {
+                throw failure('ConflictError', '別のタブでデータが更新されました。編集中の内容を控えてから再読み込みしてください。');
+              }
+              recordStore.getAllKeys().onsuccess = keysEvent => {
+                try {
+                  // A missing metadata record with leftover records is not an empty database.
+                  if (!current && keysEvent.target.result.length) {
+                    throw failure('DataError', '保存データの管理情報が見つかりません。上書きを停止しました。');
+                  }
+                  for (const id of keysEvent.target.result) if (!ids.has(id)) recordStore.delete(id);
+                  for (const record of changed) recordStore.put(record);
+                  metaStore.put({id: 'state', schema: 1, initialized: true, revision,
+                    version: 3, trainerName: next.trainerName, recordIds: [...ids], updatedAt: Date.now()});
+                } catch (error) { abort(error); }
+              };
+            } catch (error) { abort(error); }
+          };
+        });
+        remember(next, revision);
+        return {revision};
+      }
+      function close() {
+        if (database) database.close();
+        database = null;
+        cachedRevision = null;
+        cachedRecords = new Map();
+      }
+      return {load, commit, close};
+    }
+
     const KEY = 'kabukuwa-database-v2';
     const VIEW_KEY = 'kabukuwa-view-mode-v3';
     const OLD_KEY = 'kuwagata-log-collection-v1';
@@ -1354,17 +1577,225 @@
     }
     let toastTimer = null;
     let hasStorageError = false;
+    let storageErrorMessage = '';
+    let storageReady = false;
+    let storageCanRestore = false;
+    let storageLoading = true;
+    let storageBusy = false;
+    let storageRevision = null;
+    let hasReadableData = false;
+    let storageInvalidated = false;
+    let legacyRecoveryText = null;
+    let lockedControls = [];
+    const MIGRATION_KEY = KEY + '-indexeddb-migrated';
+    const storage = createKabukuwaStore({
+      onBlocked: () => {
+        storageErrorMessage = '保存領域の準備を待っています。同じアプリを開いている別のタブを閉じてください。';
+        updateStorageNotice();
+      },
+      onVersionChange: () => {
+        storageInvalidated = true;
+        storageReady = false;
+        storageCanRestore = false;
+        hasStorageError = true;
+        storageErrorMessage = '別のタブでアプリが更新されました。編集中の内容を控えてから、このページを再読み込みしてください。';
+        updateStorageNotice();
+      }
+    });
 
-    function load() {
+    function setStorageBusy(busy) {
+      storageBusy = busy;
+      document.querySelector('.page').setAttribute('aria-busy', String(busy));
+      if (busy) {
+        lockedControls = [...document.querySelectorAll('button, input, select, textarea')]
+          .map(node => ({node, disabled: node.disabled}));
+        lockedControls.forEach(({node}) => { node.disabled = true; });
+      } else {
+        lockedControls.forEach(({node, disabled}) => { if (node.isConnected) node.disabled = disabled; });
+        lockedControls = [];
+      }
+    }
+    function updateStorageNotice() {
+      const notice = el('storageWarning');
+      notice.classList.toggle('hidden', !storageLoading && !hasStorageError);
+      notice.textContent = storageErrorMessage || (storageLoading
+        ? '個体情報と写真を読み込んでいます…'
+        : '保存を完了できませんでした。バックアップを保存してください。');
+    }
+    function canChangeData(restore = false) {
+      if (storageBusy || storageLoading) {
+        toast(storageLoading ? 'データの読み込みが終わるまでお待ちください。' : '保存が終わるまでお待ちください。');
+        return false;
+      }
+      if (!storageReady && !(restore && storageCanRestore)) {
+        toast(storageErrorMessage || '保存領域を準備できません。バックアップを保管してから再読み込みしてください。');
+        return false;
+      }
+      return true;
+    }
+    function describeStorageError(error) {
+      if (error?.name === 'QuotaExceededError') {
+        return '保存容量が不足しています。写真入りバックアップを保存し、端末の空き容量を確認してください。変更前のデータは残っています。';
+      }
+      if (['ConflictError', 'DataError', 'TimeoutError', 'NotSupportedError', 'LegacyReadError'].includes(error?.name)) {
+        return error.message;
+      }
+      if (error?.name === 'SecurityError' || error?.name === 'NotAllowedError') {
+        return 'この開き方では保存が許可されていません。バックアップを保管し、Safariの通常モードで同じURLを開いてください。';
+      }
+      if (error?.name === 'VersionError') {
+        return '保存先が新しい版へ更新されています。編集中の内容を控えてから、このページを再読み込みしてください。';
+      }
+      return '保存を完了できませんでした。変更前のデータは残っています。入力内容を確認してもう一度お試しください。';
+    }
+    function readLegacyData() {
+      let text;
       try {
         const saved = localStorage.getItem(KEY);
-        const older = !saved ? localStorage.getItem(OLD_KEY) : null;
-        if (saved || older) {
-          const parsed = JSON.parse(saved || older);
-          if (parsed && Array.isArray(parsed.records)) { app = cleanData(parsed); if (older) save(); }
-        }
-      } catch (err) { hasStorageError = true; console.warn('データの読み込みに失敗しました', err); }
+        text = saved === null ? localStorage.getItem(OLD_KEY) : saved;
+      } catch (error) {
+        throw Object.assign(new Error('以前の保存データを読み取れません。JSONバックアップを保管し、新しい保存先へ「復元」してください。'), {name: 'LegacyReadError'});
+      }
+      if (text === null) return null;
+      legacyRecoveryText = text;
+      let data;
+      try { data = JSON.parse(text); }
+      catch (error) {
+        throw Object.assign(new Error('以前の保存データの形式を読み取れません。バックアップを保管し、正しいJSONファイルを「復元」してください。'), {name: 'DataError'});
+      }
+      return checkedIncomingData(data);
     }
+    function hasMigrationMarker() {
+      try { return localStorage.getItem(MIGRATION_KEY) !== null; }
+      catch (error) {
+        throw Object.assign(new Error('以前の保存先を確認できないため、自動引き継ぎを停止しました。JSONバックアップを「復元」すると、新しい保存先を使えます。'), {name: 'LegacyReadError'});
+      }
+    }
+    function checkedIncomingData(data) {
+      if (!data || !Array.isArray(data.records) || data.records.length > 5000 ||
+          data.records.some(record => !record || typeof record !== 'object' || !String(record.species || '').trim())) {
+        throw Object.assign(new Error('個体データの形式を確認できません。元のバックアップを保管してください。'), {name: 'DataError'});
+      }
+      const ids = new Set();
+      for (const record of data.records) {
+        if (record.id != null && String(record.id)) {
+          const id = String(record.id);
+          if (ids.has(id)) throw Object.assign(new Error('個体IDが重複しているため、取り込みを中止しました。元のデータは変更していません。'), {name: 'DataError'});
+          ids.add(id);
+        }
+        if (record.photo != null && record.photo !== '' && !validPhotoData(record.photo)) {
+          throw Object.assign(new Error('読み込めない写真が含まれています。元のバックアップを保管してください。'), {name: 'DataError'});
+        }
+      }
+      return cleanData(data);
+    }
+    function markMigration() {
+      // Optional marker only. A full legacy localStorage must not block IndexedDB.
+      try { localStorage.setItem(MIGRATION_KEY, '1'); } catch (_) { /* Keep the original data untouched. */ }
+    }
+    async function initializeStorage() {
+      setStorageBusy(true);
+      updateStorageNotice();
+      let message = '';
+      let checkedDatabase = false;
+      try {
+        const loaded = await storage.load();
+        checkedDatabase = true;
+        if (storageInvalidated) throw Object.assign(new Error('別のタブでアプリが更新されました。このページを再読み込みしてください。'), {name: 'ConflictError'});
+        storageRevision = loaded.revision;
+        storageCanRestore = true;
+        if (loaded.initialized) {
+          app = checkedIncomingData(loaded.app);
+          hasReadableData = true;
+          storageReady = true;
+          markMigration();
+        } else {
+          const hadMigrated = hasMigrationMarker();
+          const legacy = readLegacyData();
+          if (legacy) { app = legacy; hasReadableData = true; }
+          if (hadMigrated) {
+            throw Object.assign(new Error('新しい保存先のデータが見つかりません。移行前の控えがある場合は一覧に表示しています。最新のJSONバックアップを「復元」してください。'), {name: 'DataError'});
+          }
+          const expected = JSON.stringify(app);
+          const result = await storage.commit(app, null);
+          storageRevision = result.revision;
+          if (storageInvalidated) throw Object.assign(new Error('引き継ぎ中に別のタブでアプリが更新されました。このページを再読み込みしてください。'), {name: 'ConflictError'});
+          const verified = await storage.load();
+          if (storageInvalidated || verified.revision !== result.revision) {
+            throw Object.assign(new Error('引き継ぎ後に別のタブでデータが更新されました。最新のデータを読み込むため、このページを再読み込みしてください。'), {name: 'ConflictError'});
+          }
+          if (!verified.initialized || JSON.stringify(verified.app) !== expected) {
+            throw Object.assign(new Error('データ移行後の確認に失敗しました。元のデータは残しています。バックアップを保管してください。'), {name: 'DataError'});
+          }
+          app = verified.app;
+          hasReadableData = true;
+          storageReady = true;
+          markMigration();
+          legacyRecoveryText = null;
+          if (legacy) message = '個体情報と写真を新しい保存先へ引き継ぎました。';
+        }
+        hasStorageError = false;
+        storageErrorMessage = '';
+      } catch (error) {
+        storageReady = false;
+        if (error?.name === 'ConflictError' || storageInvalidated) storageCanRestore = false;
+        hasStorageError = true;
+        storageErrorMessage = describeStorageError(error);
+        if (!checkedDatabase) {
+          storageCanRestore = false;
+          try {
+            const legacy = readLegacyData();
+            if (legacy) {
+              app = legacy;
+              hasReadableData = true;
+              storageErrorMessage = '新しい保存先を読み込めないため、移行前の控えを表示しています。バックアップを保管してください。 ' + storageErrorMessage;
+            }
+          } catch (_) { /* Raw legacy text remains available through the backup button. */ }
+        }
+        console.warn('個体データの読み込み・移行に失敗しました', error);
+      } finally {
+        storageLoading = false;
+        setStorageBusy(false);
+        render();
+        updateStorageNotice();
+        if (hasStorageError) toast(storageErrorMessage);
+        else if (message) toast(message);
+      }
+    }
+    async function save(next, restore = false) {
+      if (!canChangeData(restore)) return false;
+      setStorageBusy(true);
+      try {
+        const result = await storage.commit(next, storageRevision);
+        // The UI adopts the candidate only after the whole transaction commits.
+        app = next;
+        hasReadableData = true;
+        storageRevision = result.revision;
+        storageReady = !storageInvalidated;
+        storageCanRestore = !storageInvalidated;
+        legacyRecoveryText = null;
+        hasStorageError = storageInvalidated;
+        storageErrorMessage = storageInvalidated
+          ? '保存は完了しましたが、別のタブでアプリが更新されています。続けて編集する前に、このページを再読み込みしてください。'
+          : '';
+        markMigration();
+        return true;
+      } catch (error) {
+        hasStorageError = true;
+        storageErrorMessage = describeStorageError(error);
+        if (error?.name === 'ConflictError' || error?.name === 'VersionError') {
+          storageReady = false;
+          storageCanRestore = false;
+        }
+        console.warn('保存を完了できませんでした', error);
+        toast(storageErrorMessage);
+        return false;
+      } finally {
+        setStorageBusy(false);
+        updateStorageNotice();
+      }
+    }
+
     function validPhotoData(value) {
       return typeof value === 'string' && value.length <= PHOTO_LIMIT &&
         /^data:image\/jpeg;base64,[a-zA-Z0-9+/]+={0,2}$/.test(value) ? value : null;
@@ -1391,22 +1822,6 @@
         trainerName: typeof data?.trainerName === 'string' ? data.trainerName.trim().slice(0,24) : (app.trainerName || ''),
         records: (Array.isArray(data?.records) ? data.records : []).filter(r => r && String(r.species || '').trim()).slice(0, 5000).map(cleanRecord)
       };
-    }
-    function updateStorageNotice() {
-      el('storageWarning').classList.toggle('hidden', !hasStorageError);
-    }
-    function checkStorage() {
-      try {
-        const test = 'kabukuwa-storage-test';
-        localStorage.setItem(test, '1');
-        if(localStorage.getItem(test) !== '1') throw new Error('保存した値を読み直せません');
-        localStorage.removeItem(test);
-      } catch(err) { hasStorageError = true; console.warn('ブラウザ内の保存が利用できません', err); }
-      updateStorageNotice();
-    }
-    function save() {
-      try { localStorage.setItem(KEY, JSON.stringify(app)); hasStorageError = false; updateStorageNotice(); return true; }
-      catch (err) { hasStorageError = true; updateStorageNotice(); console.warn('保存できませんでした', err); return false; }
     }
     function newId() { return 'r-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10); }
     function toast(message) {
@@ -1506,21 +1921,22 @@
       el('editTrainer').setAttribute('aria-label',name ? `トレーナー：${name}。タップして変更` : 'トレーナー名を登録する');
     }
     function openTrainer() {
+      if (!canChangeData()) return;
       el('trainerInput').value = app.trainerName || '';
       el('trainerDialog').showModal();
       if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
         setTimeout(() => { if (el('trainerDialog').open) el('trainerInput').focus({preventScroll:true}); },0);
       }
     }
-    function saveTrainer(event) {
+    async function saveTrainer(event) {
       event.preventDefault();
-      const name=el('trainerInput').value.trim();
-      if(!name){ el('trainerInput').focus(); toast('トレーナー名を入力してください。'); return; }
-      app.trainerName = name.slice(0,24);
-      const saved=save();
+      if (!canChangeData()) return;
+      const name = el('trainerInput').value.trim();
+      if (!name) { el('trainerInput').focus(); toast('トレーナー名を入力してください。'); return; }
+      if (!await save({...app, trainerName: name.slice(0, 24)})) return;
       closeDialog('trainerDialog');
       renderTrainer();
-      toast(saved ? 'トレーナー名を保存しました。' : '端末内に保存できません。バックアップを保存してください。');
+      toast('トレーナー名を保存しました。');
     }
     function render() {
       renderTrainer();
@@ -1855,6 +2271,7 @@
       updatePhotoEditor();
     }
     function openEditor(record = null) {
+      if (!canChangeData()) return;
       editingId = record?.id || null;
       el('editorTitle').textContent = record ? '個体を編集' : '個体を登録';
       el('saveRecord').textContent = record ? '変更を保存' : '登録する';
@@ -1885,14 +2302,16 @@
       }
     }
     function closeDialog(id) {
+      if (storageBusy) { toast('保存が終わるまでお待ちください。'); return; }
       const dialog = el(id);
       const active = document.activeElement;
       // 入力欄のキーボードを閉じてからモーダルを終了する。
       if (active && dialog.contains(active) && typeof active.blur === 'function') active.blur();
       dialog.close();
     }
-    function saveRecord(event) {
+    async function saveRecord(event) {
       event.preventDefault();
+      if (!canChangeData()) return;
       if (photoBusy) { toast('写真の圧縮が終わってから保存してください。'); return; }
       const species = el('speciesInput').value.trim();
       if (!species) { el('speciesInput').focus(); toast('種類を入力してください。'); return; }
@@ -1912,14 +2331,8 @@
         strength: Number(el('strengthInput').value),
         createdAt: previous?.createdAt || now, updatedAt: now, demo: false
       };
-      const originalRecords = app.records;
-      if (previous) app.records = app.records.map(r=>r.id === previous.id ? rec : r);
-      else app.records = [...app.records,rec];
-      if (!save()) {
-        app.records = originalRecords;
-        toast('保存できません。端末の保存容量を確認するか、写真を減らしてください。');
-        return;
-      }
+      const records = previous ? app.records.map(r => r.id === previous.id ? rec : r) : [...app.records, rec];
+      if (!await save({...app, records})) return;
       closeDialog('editor');render();
       toast(previous ? '個体情報を更新しました。' : '個体を登録しました。');
     }
@@ -1930,11 +2343,19 @@
     }
     function dateCode() { return new Date().toLocaleDateString('sv-SE'); }
     function exportBackup() {
+      if (storageLoading || storageBusy) { toast('データの読み込み・保存が終わるまでお待ちください。'); return; }
+      if (!storageReady && legacyRecoveryText !== null) {
+        downloadFile('移行前の個体情報_' + dateCode() + '.json', legacyRecoveryText, 'application/json;charset=utf-8');
+        toast('移行前の控えを書き出しました。新しい保存先の最新データとは限らないため、大切に保管してください。');
+        return;
+      }
+      if (!hasReadableData) { toast('データを読み込めていないため、空のバックアップの書き出しを停止しました。以前のバックアップを保管してください。'); return; }
       const trainerFileName = String(app.trainerName || 'トレーナー未登録').trim().replace(/[\\/:*?"<>|\x00-\x1f]/g, '_').replace(/[.\s]+$/g, '') || 'トレーナー未登録';
       downloadFile(trainerFileName + '_' + dateCode() + '_個体情報.json', JSON.stringify({...app, exportedAt:new Date().toISOString()},null,2), 'application/json;charset=utf-8');
       toast('バックアップファイルを書き出しました。');
     }
     function exportCsv() {
+      if (storageLoading || storageBusy) { toast('データの読み込み・保存が終わるまでお待ちください。'); return; }
       const csvCell = v => '"' + String(v ?? '').replaceAll('"','""') + '"';
       const rows = [['トレーナー名','種類','名前','サイズ(mm)','体重(g)','状態','総合的な強さ','パワー','テクニック','メンタル','備考1','備考2','登録日'], ...app.records.map(r=>[app.trainerName || '',r.species,r.name,r.size === null ? '' : numberText(r.size),r.weight === null ? '' : weightText(r.weight),r.status || '現役',r.strength ?? '',...r.ratings,r.notes,r.notes2 || '',new Date(r.createdAt).toLocaleDateString('ja-JP')])];
       downloadFile('kuwagata-list-' + dateCode() + '.csv', '\uFEFF' + rows.map(row=>row.map(csvCell).join(',')).join('\r\n'), 'text/csv;charset=utf-8');
@@ -1944,13 +2365,19 @@
       const file = event.target.files?.[0];
       if (!file) return;
       try {
+        if (!canChangeData(true)) return;
         const obj = JSON.parse(await file.text());
-        if (!obj || !Array.isArray(obj.records)) throw new Error('形式が異なります');
-        const newData = cleanData(obj);
-        if (!window.confirm(`バックアップの${newData.records.length}匹で、現在の${app.records.length}匹のデータを置き換えます。実行しますか？`)) return;
-        app = newData; const saved=save(); render(); toast(saved ? newData.records.length + '匹のデータを復元しました。' : '復元しましたが自動保存できません。バックアップしてください。');
-      } catch (err) { toast('復元できませんでした。正しいバックアップファイルか確認してください。'); console.warn(err); }
-      finally { event.target.value = ''; }
+        const newData = checkedIncomingData(obj);
+        if (!canChangeData(true)) return;
+        const currentLabel = hasReadableData ? `現在の${app.records.length}匹のデータ` : '保存先の現在のデータ';
+        if (!window.confirm(`バックアップの${newData.records.length}匹で、${currentLabel}を置き換えます。実行しますか？`)) return;
+        if (!await save(newData, true)) return;
+        render();
+        toast(newData.records.length + '匹の個体情報と写真を復元しました。');
+      } catch (error) {
+        toast(error?.name === 'DataError' ? error.message : '復元できませんでした。正しいJSONバックアップか確認してください。現在のデータは変更していません。');
+        console.warn('バックアップの復元に失敗しました', error);
+      } finally { event.target.value = ''; }
     }
 
     // Local-only canvas export: all registered individuals, independent of active filters.
@@ -2145,13 +2572,16 @@
       toast('画像を保存できない場合は、プレビューを長押しして保存してください。');
     }
 
-    function addDemo() {
-      app.records.push({id:newId(),species:'オオクワガタ',name:'サンプル個体',size:76.2,weight:2.35,status:'現役',notes:'これは画面を試すための架空のサンプルです。強さと能力値も例です。編集・削除できます。',ratings:[8,6,7],strength:9,createdAt:Date.now(),updatedAt:Date.now(),demo:true});
-      const saved=save(); render(); toast(saved ? 'サンプル個体を追加しました。' : '自動保存できません。バックアップしてください。');
+    async function addDemo() {
+      if (!canChangeData()) return;
+      const record = {id:newId(),species:'オオクワガタ',name:'サンプル個体',size:76.2,weight:2.35,status:'現役',notes:'これは画面を試すための架空のサンプルです。強さと能力値も例です。編集・削除できます。',notes2:'',photo:null,ratings:[8,6,7],strength:9,createdAt:Date.now(),updatedAt:Date.now(),demo:true};
+      if (!await save({...app, records: [...app.records, record]})) return;
+      render();
+      toast('サンプル個体を追加しました。');
     }
 
-    load(); checkStorage(); render();
-    if (hasStorageError) toast('自動保存を使えません。まず下の「バックアップ」で保存してください。');
+    render();
+    initializeStorage();
     el('openHelp').addEventListener('click',()=>el('helpDialog').showModal());
     el('editTrainer').addEventListener('click',openTrainer);
     el('trainerForm').addEventListener('submit',saveTrainer);
@@ -2335,7 +2765,7 @@
       if (changed) lastPhotoSwipeAt = Date.now();
     });
     el('cards').addEventListener('pointercancel',()=>{mouseSwipe=null;});
-    el('cards').addEventListener('click',event=>{
+    el('cards').addEventListener('click',async event=>{
       if (Date.now() - lastPhotoSwipeAt < 500) {event.preventDefault();return;}
       const back = event.target.closest('[data-photo-back]');
       if (back) {hidePhotoSide(back.closest('.beetle-card'));return;}
@@ -2363,8 +2793,11 @@
       const button = event.target.closest('button[data-action]'); if (!button) return;
       const rec = app.records.find(r=>r.id===button.dataset.id); if (!rec) return;
       if(button.dataset.action==='edit') openEditor(rec);
-      else if(button.dataset.action==='delete' && window.confirm(`「${rec.name || rec.species}」を削除しますか？`)) {
-        app.records = app.records.filter(r=>r.id!==rec.id); const saved=save(); render(); toast(saved ? '個体を削除しました。' : '自動保存できません。バックアップしてください。');
+      else if (button.dataset.action === 'delete') {
+        if (!canChangeData() || !window.confirm(`「${rec.name || rec.species}」を削除しますか？`)) return;
+        if (!await save({...app, records: app.records.filter(r => r.id !== rec.id)})) return;
+        render();
+        toast('個体を削除しました。');
       }
     });
     el('cards').addEventListener('keydown', event => {
@@ -2387,8 +2820,11 @@
     el('exportJson').addEventListener('click',exportBackup);
     el('exportCsv').addEventListener('click',exportCsv);
     el('imageDownload').addEventListener('click',saveImagePage);
-    el('importJson').addEventListener('click',()=>el('importFile').click());
+    el('importJson').addEventListener('click',()=>{ if (canChangeData(true)) el('importFile').click(); });
     el('importFile').addEventListener('change',importBackup);
+    document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('cancel', event => {
+      if (storageBusy) { event.preventDefault(); toast('保存が終わるまでお待ちください。'); }
+    }));
   })();
   </script>
 
